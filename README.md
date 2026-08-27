@@ -34,6 +34,14 @@ Then use it in a project:
 Use $font-cut to audit this interface and propose a safe typography reduction.
 ```
 
+## Improve Codebase Layout
+
+`improve-codebase-layout` reorganizes files and folders for newcomer navigation without redesigning modules or changing behavior.
+
+```text
+Use $improve-codebase-layout to propose a clearer repository layout.
+```
+
 ## HTML Drop
 
 `html-drop` turns a deliverable into a self-contained HTML artifact. Send `html` for a local file, `html+` for a live mobile-friendly preview, or `html-` to close and clean up the preview.

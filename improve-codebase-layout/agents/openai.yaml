@@ -1,0 +1,4 @@
+interface:
+  display_name: "Improve Codebase Layout"
+  short_description: "Rearrange files for easier codebase navigation"
+  default_prompt: "Use $improve-codebase-layout to audit this repository layout and propose a cleaner target tree."
