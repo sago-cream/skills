@@ -62,3 +62,11 @@ Each skill also works independently: `html-drop` can create local artifacts, whi
 Forward port 3000.
 Forward this HTML file as homepage.
 ```
+
+## Sago Share
+
+`sago-share` publishes a local HTML file or static prototype to `share.hsichen.dev` through the `sago-cream/share-prototypes` repository.
+
+```text
+Use $sago-share to publish this prototype.
+```
