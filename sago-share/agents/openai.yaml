@@ -1,0 +1,4 @@
+interface:
+  display_name: "Sago Share"
+  short_description: "Publish prototypes to share.hsichen.dev"
+  default_prompt: "Use $sago-share to publish this prototype."
