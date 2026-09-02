@@ -2,6 +2,10 @@
 
 Small, focused skills for Codex.
 
+## Chill
+
+`chill` keeps discarded implementation attempts out of product history without hiding what the agent tried during development.
+
 ## Design
 
 `design` routes interface and product design work to the smallest useful set of installed design skills. It can combine specialists for typography, animation, CSS discipline, interface polish, and Product Design workflows without loading the whole group.

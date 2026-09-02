@@ -1,0 +1,3 @@
+interface:
+  display_name: "Chill"
+  short_description: "Don't document problems that never shipped"
