@@ -16,7 +16,7 @@ Install it with its companion CSS skill:
 Install design and unslop-css from https://github.com/sago-cream/skills
 ```
 
-Its optional capabilities come from [Product Design](https://learn.chatgpt.com/docs/plugins), [animation-vocabulary](https://github.com/emilkowalski/skills/tree/main/skills/animation-vocabulary), [font-cut](https://github.com/sago-cream/skills/tree/main/font-cut), [review-animations](https://github.com/emilkowalski/skills/tree/main/skills/review-animations), [emil-design-eng](https://github.com/emilkowalski/skills/tree/main/skills/emil-design-eng), and [make-interfaces-feel-better](https://github.com/jakubkrehel/make-interfaces-feel-better/tree/main/skills/make-interfaces-feel-better). Missing capabilities are skipped rather than installed automatically.
+Its optional capabilities come from [Product Design](https://learn.chatgpt.com/docs/plugins), [animation-vocabulary](https://github.com/emilkowalski/skills/tree/main/skills/animation-vocabulary), [font-cut](https://github.com/sago-cream/skills/tree/main/font-cut), [review-animations](https://github.com/emilkowalski/skills/tree/main/skills/review-animations), and [ui-polish](ui-polish). Missing capabilities are skipped rather than installed automatically.
 
 ## Unslop CSS
 
@@ -75,6 +75,12 @@ Forward this HTML file as homepage.
 Use $sago-share to publish this prototype.
 ```
 
-## Imported skills
+## UI Polish
 
-Unmodified upstream snapshots of `emil-design-eng`, `make-interfaces-feel-better`, `codebase-design`, and `improve-codebase-architecture` are included for an independently reviewable consolidation. These retain their upstream dependencies and behavior; the import does not install them locally. See [third-party attribution](THIRD_PARTY.md) for authors, licenses, and pinned sources.
+`ui-polish` consolidates Emil Kowalski's and Jakub Krehel's interface guidance while preserving source wording and moving detailed recipes into optional references. It replaces the separate `emil-design-eng` and `make-interfaces-feel-better` skills.
+
+## Improve Codebase Architecture
+
+`improve-codebase-architecture` combines Matt Pocock's architecture workflow and `codebase-design` vocabulary in one explicit-only skill. It keeps the visual report and removes the grilling loop and external skill dependencies.
+
+See [third-party attribution](THIRD_PARTY.md) for the original authors, commit-pinned sources, and complete licenses included with each adaptation.

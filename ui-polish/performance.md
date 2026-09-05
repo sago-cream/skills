@@ -1,6 +1,6 @@
 # Performance
 
-Transition specificity and GPU compositing hints.
+Transition specificity and GPU compositing hints. Compositing depends on browser and implementation; verify the affected interaction. The table below is a starting point, not a guarantee.
 
 ## Transition Only What Changes
 
