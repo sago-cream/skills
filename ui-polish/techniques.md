@@ -12,7 +12,7 @@ Start with a responsive ease-out for controls entering or responding to input, a
 --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
 ```
 
-These examples come from Emil's guide; project curves take precedence. Small overlays often need about 125–250ms. Prefer a shorter, quieter exit when the user's attention has moved on. A toast may need only a small fixed offset; a drawer should retain its full spatial direction. No universal easing or duration fits every entrance and exit. Frequent keyboard interactions can be immediate.
+Project curves take precedence over these starting points. Small overlays often need about 125–250ms. Prefer a shorter, quieter exit when the user's attention has moved on. A toast may need only a small fixed offset; a drawer should retain its full spatial direction. No universal easing or duration fits every entrance and exit. Frequent keyboard interactions can be immediate.
 
 ## Press feedback
 
@@ -51,7 +51,7 @@ Reserve the icon footprint; overlap outgoing and incoming glyphs so labels do no
 }
 ```
 
-This milder example adapts the originals; it does not preserve Jakub's exact 0.25 scale / 4px blur recipe. Try a slight blur only if an overlapping transition remains visually awkward. Avoid bounce for routine state changes. Update the control's semantic state separately; decorative glyphs should not duplicate accessible labels. Check icons at the smallest rendered size, matching stroke weight to neighboring text and using native grid sizes when practical.
+Try a slight blur only if an overlapping transition remains visually awkward. Avoid bounce for routine state changes. Update the control's semantic state separately; decorative glyphs should not duplicate accessible labels. Check icons at the smallest rendered size, matching stroke weight to neighboring text and using native grid sizes when practical.
 
 ## Overlay geometry and tooltip groups
 
@@ -64,5 +64,3 @@ Delay the first tooltip to prevent accidental activation, then skip the repeated
 Compare normal playback with slowed playback to separate a timing problem from dropped frames. Inspect style recalculation, layout, and paint on the affected interaction. During dragging, investigate inherited CSS custom-property updates on a large ancestor: they can broaden style invalidation. Compare a transform update localized to the moving element, or a suitably scoped property, before changing the implementation.
 
 Prefer transform and opacity when they express the effect, but do not assume all uses are composited or all library shorthand is slow. Blur and clipping can be expensive depending on size, browser, and implementation. Add a narrowly scoped will-change hint only after a demonstrated benefit; unnecessary layers cost memory. For gestures, check the actual touch device when available and state when it was not tested.
-
-Adapted from Emil Kowalski and Jakub Krehel; see [UPSTREAM.md](UPSTREAM.md) and the full notices in licenses/.
