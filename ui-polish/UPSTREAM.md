@@ -9,4 +9,8 @@ Both complete notices are distributed inside this skill, including when installe
 
 ## What changed
 
-Combined motion judgment, interaction details, typography, surfaces, icons, and performance into one entrypoint with a short optional techniques reference. Removed duplicated examples, promotional framing, forced report tables, review modes and quotas, and unconditional numeric styling rules. Preserved reduced motion, input feedback, interruption, and review evidence. Timing and aesthetic values are contextual starting points. Preserved preferred press feedback, easing examples, stable icon swaps, smallest-size icon inspection, overlay behavior, and specific rendering diagnostics; the milder icon-swap recipe is an adaptation, not an unchanged upstream example. Platform and GPU claims are no longer unconditional guarantees. The original files remain reviewable in import PR #12 and the pinned upstream trees above.
+Consolidated conservatively: retained source wording and code examples, moved detailed material into supporting references, and removed duplicate or promotional material. Author attribution stays here and in the complete license notices; operational instructions stand alone.
+
+The main entrypoint retains the original interface-detail principles. Full typography, surfaces, animations, icons, and performance references are included. Motion decision trees and implementation recipes are preserved in techniques.md. Explicit changes resolve the 0.96/0.97 press conflict in favor of 0.97, reconcile drawer timing and exit context, qualify broad acceleration claims, and remove forced review ceremony. The original exact icon-swap recipe is restored.
+
+The untouched source files remain reviewable in import PR #12. upstream-skills.json records those baseline hashes, not the adapted files.

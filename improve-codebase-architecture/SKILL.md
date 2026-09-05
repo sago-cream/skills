@@ -6,45 +6,77 @@ license: MIT
 
 # Improve codebase architecture
 
-Reduce the knowledge callers need and concentrate related behavior where it can change together. Favor concrete friction in the requested area over speculative architecture improvements.
+Design **deep modules**: a lot of behaviour behind a small interface, placed at a clean seam, testable through that interface. Use this language and these principles wherever code is being designed or restructured. The aim is leverage for callers, locality for maintainers, and testability for everyone.
 
-## Design vocabulary
+## Glossary
 
-- **Module:** behavior behind an interface, at any useful scale.
-- **Interface:** everything callers must know, including types, ordering, invariants, errors, configuration, and performance expectations.
-- **Depth:** useful behavior available through a small conceptual interface; not a ratio of code lines.
-- **Seam:** a place where an implementation can vary. An **adapter** is a concrete implementation at that seam.
-- **Locality:** related knowledge, changes, and failures concentrate in one place. **Leverage:** callers gain substantial behavior without learning the internals.
+Use these distinctions while retaining accurate project domain terms.
 
-Use these distinctions when helpful, while retaining the repository's domain names and ordinary terms such as service or API where they are accurate.
+**Module**: anything with an interface and an implementation. Deliberately scale-agnostic: a function, class, package, or tier-spanning slice.
 
-## Find opportunities
+**Interface**: everything a caller must know to use the module correctly: the type signature, but also invariants, ordering constraints, error modes, required configuration, and performance characteristics.
 
-Start with the user's named area. For an open-ended audit, use recent changes to locate recurring friction. Consult relevant existing domain notes and decisions when they affect the candidate; do not create a glossary or ADR collection as a prerequisite. Reopen an existing architectural decision only when concrete friction justifies its cost; state that reason and the original rationale being reconsidered. Do not pad a report with alternatives an applicable decision already ruled out.
+**Implementation**: what's inside a module, its body of code. Distinct from **Adapter**: a thing can be a small adapter with a large implementation (a Postgres repo) or a large adapter with a small implementation (an in-memory fake). Reach for "adapter" when the seam is the topic; "implementation" otherwise.
 
-Look for callers that coordinate too many internals, pass-through layers, knowledge duplicated across files, or behavior whose tests require reaching through several abstractions. Trace actual callers and dependencies before proposing a change.
+**Depth**: leverage at the interface. The amount of behaviour a caller (or test) can exercise per unit of interface they have to learn. A module is **deep** when a large amount of behaviour sits behind a small interface, **shallow** when the interface is nearly as complex as the implementation.
 
-Apply the deletion test: if removing a wrapper makes complexity disappear, it may be unnecessary. If removing a module spreads its knowledge across callers, it is earning its place. A smaller file count alone is not evidence of improvement.
+**Seam**: a place where you can alter behaviour without editing in that place; the *location* at which a module's interface lives. Where to put the seam is its own design decision, distinct from what goes behind it.
 
-## Shape the change
+**Adapter**: a concrete thing that satisfies an interface at a seam. Describes *role* (what slot it fills), not substance (what's inside).
 
-Hide cohesive implementation details behind an interface that makes common use simple. Keep invariants and failure behavior explicit. Avoid introducing a port solely for a hypothetical future implementation; a concrete production/test substitution or another real variant can justify one. Internal test seams need not become public API.
+**Leverage**: what callers get from depth. More capability per unit of interface they learn. One implementation pays back across N call sites and M tests.
 
-Choose the dependency treatment from the actual ownership and substitution needs:
+**Locality**: what maintainers get from depth. Change, bugs, knowledge, and verification concentrate in one place rather than spreading across callers. Fix once, fixed everywhere.
 
-| Dependency | Interface and ownership | Test strategy |
-| --- | --- | --- |
-| Pure, in-process | Keep cohesive computation inside the module; no adapter needed merely for isolation. | Exercise behavior through its interface directly. |
-| Local-substitutable | Keep storage or I/O details internal when callers need not select the implementation. | Use a faithful local stand-in; check fidelity gaps against the real dependency where relevant. |
-| Owned remote service | Keep policy in the module; use a port with an injected transport adapter when transport substitution is useful. | In-memory adapter for policy tests; integration or contract checks for transport, errors, and service behavior. |
-| Third-party service | Isolate the external contract behind an adapter when it keeps vendor details out of callers. | Controlled fake/mock for logic; targeted contract or sandbox checks when available and authorized. A mock alone does not validate the vendor contract. |
+## Principles
 
-Test observable behavior through the resulting interface. Retain tests for meaningful contracts and failure cases; remove obsolete implementation-coupled tests only after preserving their useful coverage. Dependency injection and pure computation help when appropriate, but are not universal requirements.
+- **Depth is a property of the interface, not the implementation.** A deep module can be internally composed of small, mockable, swappable parts; they just aren't part of the interface. A module can have **internal seams** (private to its implementation, used by its own tests) as well as the **external seam** at its interface.
+- **The deletion test.** Imagine deleting the module. If complexity vanishes, it was a pass-through. If complexity reappears across N callers, it was earning its keep.
+- **The interface is the test surface.** Callers and tests cross the same seam. If you want to test *past* the interface, the module is probably the wrong shape.
+- **One adapter means a hypothetical seam. Two adapters means a real one.** Don't introduce a seam unless something actually varies across it.
 
-When alternatives materially affect the decision, compare designs that optimize for different goals: the smallest conceptual interface, the simplest common caller, and justified flexibility for real variants. These should expose different tradeoffs, not rename the same design. Show a caller example, hidden responsibilities, dependency strategy, and costs for each; recommend the strongest design or a useful combination. Independent exploration can reduce anchoring when it adds value, without a fixed agent count.
+## Supporting references
 
-## Deliver and continue
+Read [DESIGN-NOTES.md](DESIGN-NOTES.md) for diagrams and testability examples, [DEEPENING.md](DEEPENING.md) to classify dependencies, and [DESIGN-IT-TWICE.md](DESIGN-IT-TWICE.md) when comparing alternative interfaces.
 
-For an architecture audit, produce a focused HTML report with before/after diagrams, affected files, evidence of friction, proposed changes, tradeoffs, test implications, and a ranked recommendation. Read [HTML-REPORT.md](HTML-REPORT.md) when producing that report. For a narrow interface question, answer directly unless a report was requested. It is valid to find no worthwhile refactor.
+### 1. Explore
+
+**Scope before you scan: YAGNI.** Deepening a module pays off by making future changes to it easier, so put extra weight on the parts of the codebase that have recently changed. Decide *where* to look before you look:
+
+- If the user named a direction (a module, a subsystem, a pain point), take it, and skip the inference below.
+- Otherwise, walk back a good stretch of the commit history (`git log --oneline`) to find the codebase's hot spots, the files and areas that keep coming up, and let those paths pull your attention first. If the changes are scattered with no clear hot spot, widen the net.
+
+Read the project's existing domain glossary (`CONTEXT.md`) and any ADRs in the area you're touching first, when present.
+
+Then walk the codebase; use independent exploration when useful and available. Don't follow rigid heuristics; explore organically and note where you experience friction:
+
+- Where does understanding one concept require bouncing between many small modules?
+- Where are modules **shallow**, with an interface nearly as complex as the implementation?
+- Where have pure functions been extracted just for testability, but the real bugs hide in how they're called (no **locality**)?
+- Where do tightly-coupled modules leak across their seams?
+- Which parts of the codebase are untested, or hard to test through their current interface?
+
+### 2. Present candidates as an HTML report
+
+Write a self-contained HTML report in the task’s artifact directory and show or link it with the host’s supported preview. Keep source files unchanged unless requested. Each candidate gets a **before/after visualisation**.
+
+For each candidate, render a card with:
+
+- **Files**: which files/modules are involved
+- **Problem**: why the current architecture is causing friction
+- **Solution**: plain English description of what would change
+- **Benefits**: explained in terms of locality and leverage, and how tests would improve
+- **Before / After diagram**: side-by-side, custom-drawn, illustrating the shallowness and the deepening
+- **Recommendation strength**: one of `Strong`, `Worth exploring`, `Speculative`, rendered as a badge
+
+End the report with a **Top recommendation** section: which candidate you'd tackle first and why.
+
+Use existing project domain language and the glossary above.
+
+**ADR conflicts**: if a candidate contradicts an existing ADR, only surface it when the friction is real enough to warrant revisiting the ADR. Mark it clearly in the card (e.g. a warning callout: _"contradicts ADR-0007, but worth reopening because…"_). Don't list every theoretical refactor an ADR forbids.
+
+See [HTML-REPORT.md](HTML-REPORT.md) for diagram patterns and styling guidance.
+
+## Continue requested work
 
 For implementation already requested, carry the selected or clearly scoped change through implementation and affected checks. Ask only when an unresolved choice materially changes scope or behavior. An audit alone does not authorize a refactor. Record decisions only where the project already maintains them or the user asks; no interview or documentation side effects are required.
