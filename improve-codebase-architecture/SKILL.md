@@ -48,5 +48,3 @@ When alternatives materially affect the decision, compare designs that optimize 
 For an architecture audit, produce a focused HTML report with before/after diagrams, affected files, evidence of friction, proposed changes, tradeoffs, test implications, and a ranked recommendation. Read [HTML-REPORT.md](HTML-REPORT.md) when producing that report. For a narrow interface question, answer directly unless a report was requested. It is valid to find no worthwhile refactor.
 
 For implementation already requested, carry the selected or clearly scoped change through implementation and affected checks. Ask only when an unresolved choice materially changes scope or behavior. An audit alone does not authorize a refactor. Record decisions only where the project already maintains them or the user asks; no interview or documentation side effects are required.
-
-Adapted from Matt Pocock's architecture and deep-module skills. See [UPSTREAM.md](UPSTREAM.md) and [LICENSE](LICENSE).

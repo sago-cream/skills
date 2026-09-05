@@ -33,5 +33,3 @@ Transition only intended properties. Prefer transform and opacity when they expr
 Inspect changed states at normal speed; slow playback when diagnosing motion. Check interruption, reduced motion, and input modes affected by the change. In a review, tie each finding to a concrete location and user-visible consequence, distinguish taste from defects, and say what was unverified. Keep the response proportional to the request.
 
 For implementation or diagnosis of these details, read only the relevant section of [techniques.md](techniques.md): easing, press feedback, icon swaps, overlay geometry, or rendering stutter.
-
-Adapted from Emil Kowalski and Jakub Krehel. See [UPSTREAM.md](UPSTREAM.md) for sources, changes, and full MIT notices.
