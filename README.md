@@ -77,7 +77,7 @@ Use $sago-share to publish this prototype.
 
 ## UI Polish
 
-`ui-polish` condenses Emil Kowalski's and Jakub Krehel's interface guidance into contextual motion, typography, surface, and interaction decisions. It replaces the separate `emil-design-eng` and `make-interfaces-feel-better` skills.
+`ui-polish` consolidates Emil Kowalski's and Jakub Krehel's interface guidance while preserving source wording and moving detailed recipes into optional references. It replaces the separate `emil-design-eng` and `make-interfaces-feel-better` skills.
 
 ## Improve Codebase Architecture
 
