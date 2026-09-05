@@ -1,10 +1,10 @@
-# Third-party skills
+# Third-party attribution
 
-The imported skills below retain their original authorship and MIT licenses. Each folder includes the complete upstream license and a commit-pinned source record, so attribution travels with an individually installed skill. `upstream-skills.json` records the original file hashes for comparison. No repository-wide relicensing is implied.
+These skills are adaptations maintained by sago-cream. Original authorship and complete MIT copyright and permission notices are retained inside each skill, so attribution travels with an individual installation. No repository-wide relicensing or upstream endorsement is implied.
 
-| Skill | Author | Attribution |
+| Adaptation | Original authors and skills | Sources and license notices |
 | --- | --- | --- |
-| `emil-design-eng` | Emil Kowalski | [emil-design-eng/UPSTREAM.md](emil-design-eng/UPSTREAM.md) |
-| `make-interfaces-feel-better` | Jakub Krehel | [make-interfaces-feel-better/UPSTREAM.md](make-interfaces-feel-better/UPSTREAM.md) |
-| `codebase-design` | Matt Pocock | [codebase-design/UPSTREAM.md](codebase-design/UPSTREAM.md) |
-| `improve-codebase-architecture` | Matt Pocock | [improve-codebase-architecture/UPSTREAM.md](improve-codebase-architecture/UPSTREAM.md) |
+| `ui-polish` | Emil Kowalski, `emil-design-eng`; Jakub Krehel, `make-interfaces-feel-better` | [Attribution and changes](ui-polish/UPSTREAM.md) |
+| `improve-codebase-architecture` | Matt Pocock, `codebase-design` and `improve-codebase-architecture` | [Attribution and changes](improve-codebase-architecture/UPSTREAM.md) |
+
+[Import PR #12](https://github.com/sago-cream/skills/pull/12) contains the unchanged originals. `upstream-skills.json` preserves their commit hashes, source paths, and file checksums as a historical baseline; it is not a checksum manifest of the current adaptations. Each adaptation's UPSTREAM.md explains the transformation and links directly to the pinned upstream files.
