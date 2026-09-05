@@ -9,6 +9,6 @@ Both sources are pinned to commit `3cca18b368ae95cdbdebbff572ccafa662551015` of 
 
 ## What changed
 
-Merged vocabulary, deletion test, dependency guidance, behavioral testing, and interface comparison into one skill. Preserved the visual architecture report and explicit-only invocation policy. Removed the grilling loop, grilling/domain-modeling dependencies, mandatory glossary/ADR updates, fixed subagent count, and terminology bans. Replaced unconditional test deletion and adapter rules with criteria tied to coverage and actual variation. Condensed HTML guidance and removed mandatory CDN dependencies.
+Merged vocabulary, deletion test, a concrete dependency-to-test matrix, behavioral testing, and interface comparison into one skill. Preserved contrasting design objectives and the requirement for concrete friction before reopening an architectural decision. Preserved the visual architecture report and explicit-only invocation policy. Removed the grilling loop, grilling/domain-modeling dependencies, mandatory glossary/ADR updates, fixed subagent count, and terminology bans. Replaced unconditional test deletion and adapter rules with criteria tied to coverage and actual variation. Condensed HTML guidance and removed mandatory CDN dependencies.
 
 This is an adaptation, not an upstream release or endorsement. The original files remain reviewable in import PR #12 and the pinned upstream trees. `upstream-skills.json` retains the original import hashes; these describe the baseline, not the adapted files.

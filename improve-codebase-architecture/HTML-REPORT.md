@@ -8,7 +8,7 @@ For each worthwhile candidate, include:
 - Current friction, grounded in callers, dependencies, change history, or tests.
 - Before/after diagrams showing what callers know and what the proposed interface hides. Keep corresponding elements recognizable between diagrams.
 - The proposed change, behavioral constraints, tradeoffs, and testing implications.
-- Recommendation strength and any conflict with an existing architectural decision.
+- Recommendation strength and, for a conflict with an existing architectural decision, the concrete friction that justifies reopening it.
 
 Rank candidates and explain the strongest recommendation. When none justify their cost, say so. Avoid speculative filler.
 
