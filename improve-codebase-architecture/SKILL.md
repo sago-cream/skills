@@ -20,7 +20,7 @@ Use these distinctions when helpful, while retaining the repository's domain nam
 
 ## Find opportunities
 
-Start with the user's named area. For an open-ended audit, use recent changes to locate recurring friction. Consult relevant existing domain notes and decisions when they affect the candidate; do not create a glossary or ADR collection as a prerequisite.
+Start with the user's named area. For an open-ended audit, use recent changes to locate recurring friction. Consult relevant existing domain notes and decisions when they affect the candidate; do not create a glossary or ADR collection as a prerequisite. Reopen an existing architectural decision only when concrete friction justifies its cost; state that reason and the original rationale being reconsidered. Do not pad a report with alternatives an applicable decision already ruled out.
 
 Look for callers that coordinate too many internals, pass-through layers, knowledge duplicated across files, or behavior whose tests require reaching through several abstractions. Trace actual callers and dependencies before proposing a change.
 
@@ -30,16 +30,18 @@ Apply the deletion test: if removing a wrapper makes complexity disappear, it ma
 
 Hide cohesive implementation details behind an interface that makes common use simple. Keep invariants and failure behavior explicit. Avoid introducing a port solely for a hypothetical future implementation; a concrete production/test substitution or another real variant can justify one. Internal test seams need not become public API.
 
-Account for dependencies:
+Choose the dependency treatment from the actual ownership and substitution needs:
 
-- Pure, in-process behavior can often be consolidated and exercised directly.
-- A faithful local stand-in can support integration tests; check differences that matter to the behavior.
-- Owned remote services still have transport, failure, and deployment constraints. A port can separate policy from transport when that variation is useful.
-- Third-party dependencies may need an injected adapter or mock; mocks do not establish the external contract by themselves.
+| Dependency | Interface and ownership | Test strategy |
+| --- | --- | --- |
+| Pure, in-process | Keep cohesive computation inside the module; no adapter needed merely for isolation. | Exercise behavior through its interface directly. |
+| Local-substitutable | Keep storage or I/O details internal when callers need not select the implementation. | Use a faithful local stand-in; check fidelity gaps against the real dependency where relevant. |
+| Owned remote service | Keep policy in the module; use a port with an injected transport adapter when transport substitution is useful. | In-memory adapter for policy tests; integration or contract checks for transport, errors, and service behavior. |
+| Third-party service | Isolate the external contract behind an adapter when it keeps vendor details out of callers. | Controlled fake/mock for logic; targeted contract or sandbox checks when available and authorized. A mock alone does not validate the vendor contract. |
 
 Test observable behavior through the resulting interface. Retain tests for meaningful contracts and failure cases; remove obsolete implementation-coupled tests only after preserving their useful coverage. Dependency injection and pure computation help when appropriate, but are not universal requirements.
 
-When alternatives materially affect the decision, compare contrasting interfaces with a caller example, hidden responsibilities, dependency strategy, and tradeoffs. Use parallel exploration only when it adds value; there is no fixed agent count.
+When alternatives materially affect the decision, compare designs that optimize for different goals: the smallest conceptual interface, the simplest common caller, and justified flexibility for real variants. These should expose different tradeoffs, not rename the same design. Show a caller example, hidden responsibilities, dependency strategy, and costs for each; recommend the strongest design or a useful combination. Independent exploration can reduce anchoring when it adds value, without a fixed agent count.
 
 ## Deliver and continue
 
