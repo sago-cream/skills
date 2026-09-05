@@ -1,0 +1,61 @@
+[
+  {
+    "skill": "emil-design-eng",
+    "repository": "https://github.com/emilkowalski/skills",
+    "commit": "d23d7f88a2e21c9e4b1418c7abe420f5c1052ba7",
+    "source_path": "skills/emil-design-eng",
+    "author": "Emil Kowalski",
+    "license": "MIT",
+    "files_sha256": {
+      "SKILL.md": "e71de849347050c2c573c1cf24d742d5a13459557ecffa6e562f08006f46b5b7"
+    },
+    "license_sha256": "4ff5bdb7887ec1435c9cab0e8d1a7caee704d894d65c2a008ccc68b1cc2f260b"
+  },
+  {
+    "skill": "make-interfaces-feel-better",
+    "repository": "https://github.com/jakubkrehel/make-interfaces-feel-better",
+    "commit": "35545ea1512ad59fa463e6b1f95ca9c052981fe6",
+    "source_path": "skills/make-interfaces-feel-better",
+    "author": "Jakub Krehel",
+    "license": "MIT",
+    "files_sha256": {
+      "SKILL.md": "c1d508fa7bef8e47ee682b4f214c7a4ed1416b91d05a97285e555bad1c41a23e",
+      "agents/openai.yaml": "3f5ae62f7339814fef24715c700a97c07458ec3ae15dbaa7ce12fde3ba7e9ec3",
+      "animations.md": "248ad6d995b4a80038c7fec2ec2c4761fdad49738aca070bd3ca727e19a5f2c8",
+      "icons.md": "746601dcf81a322c8ba5cc5730f991496dd94dc63279bc363f781666f84fa6b0",
+      "performance.md": "f1e8b9f22de1081d1d22cd2923fdec4441ff6192082dc6988435310635e76e8f",
+      "surfaces.md": "36d7845774eb331d9889112c5339c80bbe72a342c61dd941372e5e168b9ebf45",
+      "typography.md": "518cae9f0d48d48081cd87739993d76e145c0fe2394bb9f95cbde2b003c44549"
+    },
+    "license_sha256": "ed1dfe988fc40511b4845ccd9050a143a2002fee3bedc8064c47fa342b5d8d4f"
+  },
+  {
+    "skill": "codebase-design",
+    "repository": "https://github.com/mattpocock/skills",
+    "commit": "3cca18b368ae95cdbdebbff572ccafa662551015",
+    "source_path": "skills/engineering/codebase-design",
+    "author": "Matt Pocock",
+    "license": "MIT",
+    "files_sha256": {
+      "DEEPENING.md": "f3dd099ce99289bd213914d8ee3e2429b78309c3957ca4583f7659551b1d53c1",
+      "DESIGN-IT-TWICE.md": "8e740bf98446dbd4dfdc132ac4346d9a7eedaf93de6a495889171cf7f99f16bd",
+      "SKILL.md": "2c20617f87ec8af6a434859f381b2f061a69b530444e74eb39e78bb016a6d1e2",
+      "agents/openai.yaml": "edebc9e4fcfe102114012575eaa9600b9b5fd08c311664f389c36e7bc717740f"
+    },
+    "license_sha256": "0e7ac423bf2c6e223b7c5b156f8cf72da49d748e56a1641402c31f22ad07dbb5"
+  },
+  {
+    "skill": "improve-codebase-architecture",
+    "repository": "https://github.com/mattpocock/skills",
+    "commit": "3cca18b368ae95cdbdebbff572ccafa662551015",
+    "source_path": "skills/engineering/improve-codebase-architecture",
+    "author": "Matt Pocock",
+    "license": "MIT",
+    "files_sha256": {
+      "HTML-REPORT.md": "581e8bb5a521e46bbda8ca7e19b15948bed882187108092ebb90c62513b77528",
+      "SKILL.md": "d1ac25511a936ff4250a48dbcefda363837d6bb9321b3cba73df99fa37270a75",
+      "agents/openai.yaml": "c8cb20f68ebf0edb4e497bc11ae5fcaa196004e661cd189015b04f4109ced7f1"
+    },
+    "license_sha256": "0e7ac423bf2c6e223b7c5b156f8cf72da49d748e56a1641402c31f22ad07dbb5"
+  }
+]

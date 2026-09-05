@@ -74,3 +74,7 @@ Forward this HTML file as homepage.
 ```text
 Use $sago-share to publish this prototype.
 ```
+
+## Imported skills
+
+Unmodified upstream snapshots of `emil-design-eng`, `make-interfaces-feel-better`, `codebase-design`, and `improve-codebase-architecture` are included for an independently reviewable consolidation. These retain their upstream dependencies and behavior; the import does not install them locally. See [third-party attribution](THIRD_PARTY.md) for authors, licenses, and pinned sources.
