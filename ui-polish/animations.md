@@ -282,7 +282,7 @@ The non-absolute icon (InactiveIcon) defines the layout size. The absolute icon 
 
 ## Scale on Press
 
-A subtle scale-down on click gives buttons tactile feedback. Always use `scale(0.96)`. Never use a value smaller than `0.95` — anything below feels exaggerated. Use CSS transitions for interruptibility — if the user releases mid-press, it should smoothly return.
+A subtle scale-down on click gives buttons tactile feedback. Always use `scale(0.97)`. Never use a value smaller than `0.95` — anything below feels exaggerated. Use CSS transitions for interruptibility — if the user releases mid-press, it should smoothly return.
 
 Not every button needs this. Add a `static` prop to your button component that disables the scale effect when the motion would be distracting.
 
@@ -296,14 +296,14 @@ Not every button needs this. Add a `static` prop to your button component that d
 }
 
 .button:active {
-  scale: 0.96;
+  scale: 0.97;
 }
 ```
 
 ### Tailwind Example
 
 ```tsx
-<button className="transition-transform duration-150 ease-out active:scale-[0.96]">
+<button className="transition-transform duration-150 ease-out active:scale-[0.97]">
   Click me
 </button>
 ```
@@ -311,7 +311,7 @@ Not every button needs this. Add a `static` prop to your button component that d
 ### Motion Example
 
 ```tsx
-<motion.button whileTap={{ scale: 0.96 }}>
+<motion.button whileTap={{ scale: 0.97 }}>
   Click me
 </motion.button>
 ```
@@ -321,7 +321,7 @@ Not every button needs this. Add a `static` prop to your button component that d
 Extract the scale class into a variable and conditionally apply it based on a `static` prop:
 
 ```tsx
-const tapScale = "active:not-disabled:scale-[0.96]";
+const tapScale = "active:not-disabled:scale-[0.97]";
 
 function Button({ static: isStatic, className, children, ...props }) {
   return (
