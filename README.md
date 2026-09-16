@@ -21,9 +21,7 @@ npx skills add sago-cream/skills -g
 
 ### Better Design
 
-- [$design](https://github.com/sago-cream/skills/tree/main/design): Decide which skill(s) below do we need and call them, no mental load at all, yay.
-- [$ui-polish](https://github.com/sago-cream/skills/tree/main/ui-polish): Condenses Emil Kowalski’s and Jakub Krehel’s guidance on interface details and motion.
-- [$unslop-css](https://github.com/sago-cream/skills/tree/main/unslop-css): Keeps styling changes on project tokens and a 4px grid, then checks the cascade for unintended overrides.
+- [$design](https://github.com/sago-cream/skills/tree/main/design): Builds and polishes interfaces, CSS, and motion without fighting the project’s design system.
 - [$font-cut](https://github.com/sago-cream/skills/tree/main/font-cut): Proposes a cleaner type system so Sol doesn't add 20 variants to your product :)
 
 ### Better Codebase Architecture
