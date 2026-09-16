@@ -10,9 +10,8 @@ Choose routes from the request before loading any dependency. Load only the inst
 | Request | Route |
 | --- | --- |
 | Product research, UX audit, visual exploration, URL cloning, screenshot implementation, prototype sharing, or design validation | `product-design:index` |
-| Name a described motion or animation effect | `$animation-vocabulary` |
 | Audit or reduce a typography system | `$font-cut` |
-| Review existing animation or motion code | `$review-animations` |
+| Review existing animation or motion code | `$ui-polish` |
 | Refine UI motion, interaction behavior, and visual details | `$ui-polish` |
 | Change CSS or CSS-like styling code | `$unslop-css` in addition to any relevant route above |
 
@@ -21,8 +20,8 @@ For broad interface work, combine only the routes that match a concrete part of 
 When routes overlap:
 
 1. Follow the user's instructions and the project's established design system.
-2. Prefer the narrow specialist for its job: `$font-cut` for typography-system reduction, `$review-animations` for motion review, and `$animation-vocabulary` for naming.
-3. Use `$ui-polish` for motion decisions, interaction behavior, and static interface detail.
+2. Use `$font-cut` for typography-system reduction.
+3. Use `$ui-polish` for motion review, motion decisions, interaction behavior, and static interface detail.
 4. Apply `$unslop-css` whenever the implementation changes styling code.
 
 Treat a selected route as an instruction to load and follow that installed skill's current `SKILL.md`. Do not copy or reconstruct its rules here.
@@ -30,9 +29,7 @@ Treat a selected route as an instruction to load and follow that installed skill
 ## Optional dependencies
 
 - [`product-design:index`](https://learn.chatgpt.com/docs/plugins)
-- [`animation-vocabulary`](https://github.com/emilkowalski/skills/tree/main/skills/animation-vocabulary)
 - [`font-cut`](https://github.com/sago-cream/skills/tree/main/font-cut)
-- [`review-animations`](https://github.com/emilkowalski/skills/tree/main/skills/review-animations)
 - [`ui-polish`](https://github.com/sago-cream/skills/tree/main/ui-polish)
 - [`unslop-css`](https://github.com/sago-cream/skills)
 

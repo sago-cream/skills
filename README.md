@@ -1,96 +1,43 @@
 # Skills
 
-Small, focused skills for Codex.
+Instructions and skills I add to my agents.
 
-## Chill
+## Agent Instructions
 
-`chill` keeps discarded implementation attempts out of product history without hiding what the agent tried during development.
+- [AGENTS.md](https://github.com/sago-cream/agents.md/blob/main/AGENTS.md): Astra doesn't need this yet.
 
-## Design
-
-`design` routes interface and product design work to the smallest useful set of installed design skills. It can combine specialists for typography, animation, CSS discipline, interface polish, and Product Design workflows without loading the whole group.
-
-Install it with its companion CSS skill:
-
-```text
-Install design and unslop-css from https://github.com/sago-cream/skills
-```
-
-Its optional capabilities come from [Product Design](https://learn.chatgpt.com/docs/plugins), [animation-vocabulary](https://github.com/emilkowalski/skills/tree/main/skills/animation-vocabulary), [font-cut](https://github.com/sago-cream/skills/tree/main/font-cut), [review-animations](https://github.com/emilkowalski/skills/tree/main/skills/review-animations), and [ui-polish](ui-polish). Missing capabilities are skipped rather than installed automatically.
-
-## Unslop CSS
-
-`unslop-css` keeps styling changes on the project's design tokens and 4px grid, then checks the cascade for unintended overrides. It is explicit-only on its own and is selected automatically when `design` routes work that changes styling code.
-
-## Font Cut
-
-`font-cut` audits UI typography and proposes a smaller, more consistent set of text styles without flattening meaningful hierarchy or state.
-
-Ask Codex to install it:
-
-```text
-Install font-cut from https://github.com/sago-cream/skills/tree/main/font-cut
-```
-
-Then use it in a project:
-
-```text
-Use $font-cut to audit this interface and propose a safe typography reduction.
-```
-
-## Improve Codebase Layout
-
-`improve-codebase-layout` reorganizes files and folders for newcomer navigation without redesigning modules or changing behavior.
-
-```text
-Use $improve-codebase-layout to propose a clearer repository layout.
-```
-
-## HTML Drop
-
-`html-drop` turns a deliverable into a self-contained HTML artifact. Send `html` for a local file, `html+` for a live mobile-friendly preview, or `html-` to close and clean up the preview.
-
-Install `html-drop` and `forward-port` together to enable the complete `html+` and `html-` workflow:
-
-```text
-Install html-drop and forward-port from https://github.com/sago-cream/skills
-```
-
-Each skill also works independently: `html-drop` can create local artifacts, while `forward-port` can expose an existing local server.
-
-## Forward Port
-
-`forward-port` exposes an existing local HTTP server through a Cloudflare Quick Tunnel without relying on shell aliases.
-
-```text
-Forward port 3000.
-Forward this HTML file as homepage.
-```
-
-## Sago Share
-
-`sago-share` publishes a local HTML file or static prototype to `share.hsichen.dev` through the `sago-cream/share-prototypes` repository.
-
-```text
-Use $sago-share to publish this prototype.
-```
-
-## UI Polish
-
-`ui-polish` consolidates Emil Kowalski's and Jakub Krehel's interface guidance while preserving source wording and moving detailed recipes into optional references. It replaces the separate `emil-design-eng` and `make-interfaces-feel-better` skills.
-
-## Improve Codebase Architecture
-
-`improve-codebase-architecture` combines Matt Pocock's architecture workflow and `codebase-design` vocabulary in one explicit-only skill. It keeps the visual report and removes the grilling loop and external skill dependencies.
-
-See [third-party attribution](THIRD_PARTY.md) for the original authors, commit-pinned sources, and complete licenses included with each adaptation.
-
-## PR
-
-`pr` reviews committed changes and publishes a draft PR with verification and before/after media for UI changes.
+## Install
 
 ```bash
-npx skills add sago-cream/skills -g --skill pr
+npx skills add sago-cream/skills -g
 ```
 
-Moved from [human-out-of-loop](https://github.com/sago-cream/human-out-of-loop).
+## Skills
+
+### Easier Communication with Agents
+
+- [$html-drop](https://github.com/sago-cream/skills/tree/main/html-drop): Creates a HTML artifact for complicated concepts, pair with `$forward-port` to view on mobile easily.
+- [$forward-port](https://github.com/sago-cream/skills/tree/main/forward-port): Forward port through a Cloudflare Quick Tunnel, so we can work on frontend stuff when pooping.
+
+### Sharing Prototypes
+
+- [$sago-share](https://github.com/sago-cream/skills/tree/main/sago-share): Publishes a local HTML file or static prototype to `share.hsichen.dev`.
+
+### Better Design
+
+- [$design](https://github.com/sago-cream/skills/tree/main/design): Decide which skill(s) below do we need and call them, no mental load at all, yay.
+- [$ui-polish](https://github.com/sago-cream/skills/tree/main/ui-polish): Condenses Emil Kowalski’s and Jakub Krehel’s guidance on interface details and motion.
+- [$unslop-css](https://github.com/sago-cream/skills/tree/main/unslop-css): Keeps styling changes on project tokens and a 4px grid, then checks the cascade for unintended overrides.
+- [$font-cut](https://github.com/sago-cream/skills/tree/main/font-cut): Proposes a cleaner type system so Sol doesn't add 20 variants to your product :)
+
+### Better Codebase Architecture
+
+- [$improve-codebase-architecture](https://github.com/sago-cream/skills/tree/main/improve-codebase-architecture): Combines Matt Pocock’s deep-module guidance and visual architecture review without the grilling loop.
+- [$improve-codebase-layout](https://github.com/sago-cream/skills/tree/main/improve-codebase-layout): Rearranges files and folders for newcomer navigation without redesigning modules.
+
+### Quicker Git Workflow
+
+- [$pr](https://github.com/sago-cream/skills/tree/main/pr): Reviews committed changes and publishes a maintainer-ready draft pull request.
+- [$chill](chill): Keeps discarded implementation attempts out of product history.
+
+See [third-party attribution](THIRD_PARTY.md) for original authors, sources, and licenses.
