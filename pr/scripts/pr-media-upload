@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+[[ "$#" == 2 ]] || { echo "Usage: pr-media-upload OWNER/REPO FILE" >&2; exit 2; }
+repo="$1"
+file="$(realpath "$2")"
+[[ -f "$file" ]] || exit 2
+git check-ignore -q "$file" && ! git ls-files --error-unmatch "$file" >/dev/null 2>&1 || {
+  echo "PR_MEDIA_BLOCKED reason=tracked_or_not_ignored" >&2
+  exit 3
+}
+
+if version="$(gh image --version 2>/dev/null)" &&
+  [[ "$version" =~ ^gh-image\ ([0-9]+)\.([0-9]+)\. ]] &&
+  (( BASH_REMATCH[1] > 1 || BASH_REMATCH[1] == 1 && BASH_REMATCH[2] >= 3 )) &&
+  reference="$(gh image "$file" --repo "$repo")"; then
+  printf '%s\n' "$reference"
+  exit
+fi
+exit 1

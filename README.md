@@ -84,3 +84,13 @@ Use $sago-share to publish this prototype.
 `improve-codebase-architecture` combines Matt Pocock's architecture workflow and `codebase-design` vocabulary in one explicit-only skill. It keeps the visual report and removes the grilling loop and external skill dependencies.
 
 See [third-party attribution](THIRD_PARTY.md) for the original authors, commit-pinned sources, and complete licenses included with each adaptation.
+
+## PR
+
+`pr` reviews committed changes and publishes a draft PR with verification and before/after media for UI changes.
+
+```bash
+npx skills add sago-cream/skills -g --skill pr
+```
+
+Moved from [human-out-of-loop](https://github.com/sago-cream/human-out-of-loop).
