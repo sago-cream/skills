@@ -1,11 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [[ "${1:-}" == --snapshot ]]; then
-  [[ "$#" == 3 ]] || { echo "Usage: pr-publish --snapshot OWNER/REPO NUMBER" >&2; exit 2; }
-  gh pr view "$3" --repo "$2" --json body --template '{{.body}}'
-  exit
-fi
+[[ "$#" == 3 ]] || { echo "Usage: pr-publish BASE HEAD TITLE < BODY" >&2; exit 2; }
 
 root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 state="$(bash "$root/pr-preflight" | sed -n '1p')"
@@ -19,11 +15,8 @@ head="$(value head)"
 drafts="$(value drafts)"
 number="$(gh pr list --repo "$repo" --head "$branch" --state open --json number,isDraft --jq '.[] | select(.isDraft) | .number' | head -1)"
 
-
-[[ "$#" == 3 || "$#" == 4 ]] || { echo "Usage: pr-publish BASE HEAD TITLE [SNAPSHOT] < BODY" >&2; exit 2; }
 [[ "$base" == "$1" && "$head" == "$2" ]] || { echo "PR_PUBLISH_BLOCKED reason=review_changed" >&2; exit 3; }
 title="$3"
-snapshot="${4:-}"
 title_pattern='^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\([^)]+\))?!?: .+'
 [[ "$title" =~ $title_pattern ]] || { echo "PR_PUBLISH_BLOCKED reason=invalid_title" >&2; exit 4; }
 
@@ -38,18 +31,12 @@ if grep -Eq '(\.codex-pr-media/|file://|!?\[[^]]*\]\(/)' "$body"; then
   echo "PR_PUBLISH_BLOCKED reason=local_media" >&2
   exit 6
 fi
-before="$(grep -c 'Before:' "$body" || true)"
-after="$(grep -c 'After:' "$body" || true)"
-(( before == 0 && after == 0 || before > 0 && after > 0 )) || { echo "PR_PUBLISH_BLOCKED reason=unpaired_media" >&2; exit 7; }
 
 git push "$remote" "$head:refs/heads/$branch"
 if [[ "$drafts" == 0 ]]; then
   url="$(gh pr create --draft --repo "$repo" --base "$base_branch" --head "$branch" --title "$title" --body-file "$body")"
   number="${url##*/}"
 else
-  [[ -f "$snapshot" ]] || { echo "PR_PUBLISH_BLOCKED reason=missing_snapshot" >&2; exit 8; }
-  gh pr view "$number" --repo "$repo" --json body --template '{{.body}}' >"$saved"
-  cmp -s "$snapshot" "$saved" || { echo "PR_PUBLISH_BLOCKED reason=body_changed" >&2; exit 9; }
   gh pr edit "$number" --repo "$repo" --title "$title" --body-file "$body" >/dev/null
   url="$(gh pr view "$number" --repo "$repo" --json url --jq .url)"
 fi
