@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+if [[ "${1:-}" == --snapshot ]]; then
+  [[ "$#" == 3 ]] || { echo "Usage: pr-publish --snapshot OWNER/REPO NUMBER" >&2; exit 2; }
+  gh pr view "$3" --repo "$2" --json body --template '{{.body}}'
+  exit
+fi
+
 root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 state="$(bash "$root/pr-preflight" | sed -n '1p')"
 value() { sed -n "s/.* $1=\([^ ]*\).*/\1/p" <<<"$state"; }
@@ -13,10 +19,6 @@ head="$(value head)"
 drafts="$(value drafts)"
 number="$(gh pr list --repo "$repo" --head "$branch" --state open --json number,isDraft --jq '.[] | select(.isDraft) | .number' | head -1)"
 
-if [[ "${1:-}" == --snapshot ]]; then
-  [[ "$drafts" == 0 ]] || gh pr view "$number" --repo "$repo" --json body --template '{{.body}}'
-  exit
-fi
 
 [[ "$#" == 3 || "$#" == 4 ]] || { echo "Usage: pr-publish BASE HEAD TITLE [SNAPSHOT] < BODY" >&2; exit 2; }
 [[ "$base" == "$1" && "$head" == "$2" ]] || { echo "PR_PUBLISH_BLOCKED reason=review_changed" >&2; exit 3; }

@@ -6,7 +6,7 @@ description: "Review committed changes and publish a maintainer-ready draft PR i
 ## Preflight
 
 1. Treat the current branch's Git remote as the sole publication target. Never infer a repository from GitHub CLI context, follow a parent/upstream repository, create or synchronize a fork, or publish anywhere else. Require authenticated write access; otherwise stop and ask the user to run from a branch whose remote is their writable fork or repository.
-2. Run the bundled `bash scripts/pr-preflight` from the target worktree before review and again before publication. Never review or publish while blocked.
+2. Run the bundled `bash scripts/pr-preflight` from the target worktree before review. Publication runs its own preflight; do not run an extra one before publishing. Never review or publish while blocked.
 3. Inspect its prospective commits and complete diff for task scope.
 4. If the branch is default or spent, rebuild from the reported base with only intended commits, then rerun preflight.
 
@@ -30,9 +30,9 @@ description: "Review committed changes and publish a maintainer-ready draft PR i
 
 ## Publish
 
-Use the final preflight to confirm the base and worktree HEAD still match the reviewed revisions. If either changed, repeat the affected review, checks, and UI captures before publication.
+The publishing script confirms the base and worktree HEAD still match the reviewed revisions. If either changed, repeat the affected review, checks, and UI captures before publication.
 
-For an existing draft, snapshot with `bash scripts/pr-publish --snapshot > /tmp/pr-body.old` and preserve its content. Publish with `bash scripts/pr-publish REVIEWED_BASE REVIEWED_HEAD TITLE [/tmp/pr-body.old] < /tmp/pr-body.md`; it blocks stale reviews, unsafe body replacement, invalid titles or media, and mismatched draft metadata or commits.
+For an existing draft, snapshot with `bash scripts/pr-publish --snapshot OWNER/REPO NUMBER > /tmp/pr-body.old` and preserve its content. Publish with `bash scripts/pr-publish REVIEWED_BASE REVIEWED_HEAD TITLE [/tmp/pr-body.old] < /tmp/pr-body.md`; it blocks stale reviews, unsafe body replacement, invalid titles or media, and mismatched draft metadata or commits.
 
 After pushing, wait for required checks on that head and resolve failures caused by the change within the authorized scope. Apply the same review and verification requirements to any fixes.
 
