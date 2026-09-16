@@ -21,9 +21,9 @@ description: "Review committed changes and publish a maintainer-ready draft PR i
 
 - Use the repository PR template exactly when present.
 - When repository conventions are unclear, consult recently merged PRs or base-branch Git history for vocabulary, scope, and level of detail.
-- Treat prospective commit subjects as inputs for change scope, not as PR title candidates.
-- Title: `<type>(<scope>): <imperative summary>` using the narrowest Conventional Commits type. Omit an unhelpful scope; reserve `style` for formatting-only changes.
-- Write a concise, human-readable title around the complete user-visible or system-visible outcome that makes the change valuable. Make it stand alone for a reviewer who has not read the description.
+- Title: `<type>(<scope>): <plain-language outcome>`. Name what changes and why it matters to a reviewer unfamiliar with the task. Prefer familiar repository terms; avoid internal workflow jargon and lists of implementation steps. Use the narrowest Conventional Commits type, reserve `style` for formatting-only changes, and omit an unhelpful scope.
+- Read the title without the description: can a reviewer tell what this PR accomplishes? If not, rewrite it. When scope changes, update the title to describe the complete final change.
+  Example: replace “carry authorized review fixes through draft publication” with “simplify the PR workflow and remove redundant checks”.
 - Add issue-closing syntax when the change resolves an issue.
 - Do not invent template sections or include generic command output.
 - Without a repository template, use `## Purpose`, `## Solution`, and `## Verification` for substantive changes. Purpose states the problem or user need. Solution explains the approach and relevant trade-offs; add implementation bullets only when they help reviewers. Verification records the evidence that the change works. For a trivial change, one short paragraph may replace these sections.
