@@ -15,7 +15,7 @@ description: "Review committed changes and publish a maintainer-ready draft PR i
 1. Use the preflight base and head; verify worktree HEAD before each review.
 2. Review the complete `base...head` diff. Fix actionable findings within the authorized scope, commit the fixes, rerun affected checks, and continue through publication. Ask when resolution requires a material scope decision; report unresolved blockers without publishing.
    Run repository checks with CI-equivalent options; reuse passing results for the same revision when applicable. Expected visual changes need scoped assertions, not blanket bypasses.
-3. For every UI change, require matched, reproducible `Before:` media from the exact PR base commit and `After:` media from the reviewed head; never publish with either side missing. Read [UI evidence](references/ui-evidence.md) for capture, placement, and upload details.
+3. For UI changes, follow [UI evidence](references/ui-evidence.md) before publication.
 
 ## Package
 
