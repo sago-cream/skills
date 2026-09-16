@@ -1,9 +1,4 @@
----
-name: unslop-css
-description: Keep CSS and CSS-like styling changes aligned with the project's tokens, 4px sizing and spacing grid, and existing cascade. Use when explicitly invoked for CSS, Sass, Tailwind, CSS-in-JS, or component-style changes.
----
-
-# Unslop CSS
+# Styling changes
 
 When changing styling code:
 

@@ -1,9 +1,3 @@
----
-name: ui-polish
-description: Refine UI visual details and motion when building or polishing components, or reviewing why an interaction feels off.
-license: MIT
----
-
 # UI polish
 
 Great interfaces rarely come from a single thing. It's usually a collection of small details that compound into a great experience. Apply these principles when building or reviewing UI code. Before suggesting or writing a fix, identify the project's existing styling system and express the change in that system: Tailwind in a Tailwind project, plain CSS in a CSS project, or the established CSS-in-JS approach. Never introduce a second styling system just to apply a polish fix.

@@ -1,7 +1,7 @@
 interface:
   display_name: "Design"
-  short_description: "Route interface and product design work"
-  default_prompt: "Use $design to choose and apply the right design skills for this task."
+  short_description: "Build and polish interfaces, CSS, and motion"
+  default_prompt: "Use $design to improve this interface using the project's existing styles and relevant visual or motion guidance."
 
 policy:
   allow_implicit_invocation: true

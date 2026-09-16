@@ -1,36 +1,25 @@
 ---
 name: design
-description: Route interface design, product design, typography, CSS polish, and motion work to the smallest useful set of installed skills. Use when a design request may span several specialties or the user should not need to remember which design skill to invoke.
+description: Build, polish, and review interfaces, styling, and motion using the project's design system. Use for UI implementation, CSS cleanup, interaction details, and motion review; route dedicated typography audits and Product Design workflows to their separate skills.
 ---
 
-# Design router
+# Design
 
-Choose routes from the request before loading any dependency. Load only the installed skills that have concrete work to do.
+Follow the user's scope and the project's existing design system. Identify its styling approach before suggesting changes; use its tokens, components, and libraries rather than introducing another system.
 
-| Request | Route |
-| --- | --- |
-| Product research, UX audit, visual exploration, URL cloning, screenshot implementation, prototype sharing, or design validation | `product-design:index` |
-| Audit or reduce a typography system | `$font-cut` |
-| Review existing animation or motion code | `$ui-polish` |
-| Refine UI motion, interaction behavior, and visual details | `$ui-polish` |
-| Change CSS or CSS-like styling code | `$unslop-css` in addition to any relevant route above |
+## Load only what the task needs
 
-For broad interface work, combine only the routes that match a concrete part of the task. Do not load the whole group by default. Product Design is for research, exploration, cloning, audits, and validation, not ordinary frontend implementation.
+- For CSS, Sass, Tailwind, CSS-in-JS, or component-style changes, read [styling rules](references/styling.md). Apply these alongside any relevant visual or motion guidance.
+- For building or polishing UI, read [interface principles](references/polish.md), then only the relevant detail: [typography](references/typography.md), [surfaces](references/surfaces.md), or [icons](references/icons.md).
+- For animation implementation or motion review, read [animations](references/animations.md). Use [motion techniques](references/techniques.md) for implementation recipes and [performance](references/performance.md) for rendering or responsiveness problems.
 
-When routes overlap:
+Project conventions take precedence over reference recipes. Reuse existing token values where they serve the same purpose; preserve intentional hairlines and optical adjustments. Keep changes focused instead of applying every principle to every component.
 
-1. Follow the user's instructions and the project's established design system.
-2. Use `$font-cut` for typography-system reduction.
-3. Use `$ui-polish` for motion review, motion decisions, interaction behavior, and static interface detail.
-4. Apply `$unslop-css` whenever the implementation changes styling code.
+When reviewing, inspect the actual interface and relevant states. For motion, slow playback when useful. Cite the affected source or screen, explain the user impact, and provide an actionable correction. Never imply an uninspected surface was reviewed.
 
-Treat a selected route as an instruction to load and follow that installed skill's current `SKILL.md`. Do not copy or reconstruct its rules here.
+## Separate specialist workflows
 
-## Optional dependencies
+- For a typography-system inventory or consolidation, load [$font-cut](https://github.com/sago-cream/skills/tree/main/font-cut).
+- For product research, UX audits, visual exploration, URL cloning, screenshot implementation, prototype sharing, or design validation, load `product-design:index`. Product Design is separate from ordinary frontend implementation.
 
-- [`product-design:index`](https://learn.chatgpt.com/docs/plugins)
-- [`font-cut`](https://github.com/sago-cream/skills/tree/main/font-cut)
-- [`ui-polish`](https://github.com/sago-cream/skills/tree/main/ui-polish)
-- [`unslop-css`](https://github.com/sago-cream/skills)
-
-If a selected dependency is missing, skip it and give one short sentence naming the missing skill and its source link. Do not install anything unless the user asks.
+Load a specialist only when its workflow matches the request. If it is unavailable, name the missing skill briefly and continue with the applicable guidance here; do not install it automatically.
