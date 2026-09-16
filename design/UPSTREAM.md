@@ -15,4 +15,4 @@ references/polish.md retains the original interface-detail principles. Full typo
 
 The untouched source files remain reviewable in import PR #12. upstream-skills.json records those baseline hashes, not the adapted files.
 
-The design skill now includes the former ui-polish references and unslop-css styling rules. The entrypoint loads only relevant guidance and keeps font-cut and Product Design as separate optional workflows.
+The design skill now includes the former ui-polish references and unslop-css styling rules. The entrypoint loads only relevant internal guidance and has no dependency on other skills.
