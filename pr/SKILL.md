@@ -29,9 +29,6 @@ description: Review changes and publish a draft PR. Use when asked to create or 
 ## Publish / Update
 
 - Read the current draft description and preserve relevant content when updating. Publish with `bash scripts/pr-publish REVIEWED_BASE REVIEWED_HEAD TITLE < /tmp/pr-body.md`.
-
 - Wait for required checks on the published head. Fix failures caused by the change, commit, and return to Review.
-
 - Publish drafts by default. Mark ready or merge only when explicitly requested; reviewer requests, auto-merge, and review submissions require separate authorization.
-
 - Return the PR URL, verification status, and unresolved blockers.
