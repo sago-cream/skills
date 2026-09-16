@@ -1,10 +1,6 @@
 # Skills
 
-Instructions and skills I add to my agents.
-
-## Agent Instructions
-
-- [AGENTS.md](https://github.com/sago-cream/agents.md/blob/main/AGENTS.md): Astra doesn't need this yet.
+Skills I add to my agents.
 
 ## Install
 
