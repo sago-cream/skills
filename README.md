@@ -21,6 +21,7 @@ npx skills add sago-cream/skills -g
 
 ### Better Design
 
+- [$userflow-review](https://github.com/sago-cream/skills/tree/main/userflow-review): Packs screen catalogs, HTML, and screenshots into a minimal user-flow review board with settlement and desktop/mobile previews.
 - [$design](https://github.com/sago-cream/skills/tree/main/design): Builds and polishes interfaces, CSS, and motion without fighting the project’s design system.
 - [$font-cut](https://github.com/sago-cream/skills/tree/main/font-cut): Proposes a cleaner type system so Sol doesn't add 20 variants to your product :)
 

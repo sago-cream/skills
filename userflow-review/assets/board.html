@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="dark">
+<meta name="referrer" content="no-referrer">
+<title>Review board</title>
+<style>
+:root{font:14px/1.5 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#f5f5f5;background:#000;--top-row-height:40px;--muted:#999;--line:#242424;--hover:#171717;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+*{box-sizing:border-box}body{margin:0;overflow:hidden}button{font:inherit;color:inherit;cursor:pointer;border:0;background:transparent;padding:0;min-height:40px}button:hover{background:var(--hover)}button:focus-visible{outline:2px solid white;outline-offset:-3px;border-radius:4px}button svg{width:16px;height:16px;display:block;flex-shrink:0}h1,p,figure{margin:0}button{text-wrap:pretty}[hidden]{display:none!important}
+.board{display:grid;grid-template-columns:268px minmax(0,1fr);height:100dvh}.sidebar{height:100dvh;display:flex;flex-direction:column;border-right:1px solid var(--line);min-width:0;background:#080808}.sidebar-header{height:var(--top-row-height);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 12px 0 24px;box-shadow:inset 0 -1px 0 var(--line)}.sidebar-header h1{font-size:14px;font-weight:600;letter-spacing:-.3px}.sidebar-toggle{width:40px;height:40px;display:grid;place-items:center;border-radius:4px;color:#aaa}.sidebar-toggle:hover{color:#fff}.sidebar-collapsed .board{grid-template-columns:44px minmax(0,1fr)}.sidebar-collapsed .sidebar-header{padding:0;justify-content:center}.sidebar-collapsed .sidebar-header h1,.sidebar-collapsed .navigation,.sidebar-collapsed .storage-note{display:none}
+.navigation{overflow-y:auto;flex:1;min-height:0;padding:4px 12px 16px;scrollbar-width:thin;scrollbar-color:#333 transparent}.section{margin-bottom:4px}.section-row{border-radius:4px;display:grid;grid-template-columns:minmax(0,1fr) 40px;align-items:center}.section-button{display:flex;align-items:center;text-align:left;gap:10px;padding:8px 12px;border-radius:4px;width:100%;font-size:13px}.section-button .chevron{width:12px;height:12px;color:#777;transform:rotate(-90deg)}.section-button[aria-expanded=true] .chevron{transform:rotate(0)}.section-name{flex:1}.section[data-current=true] .section-name{font-weight:650}.section[data-settled=true] .section-name{color:#999}.settle{display:grid;place-items:center;width:40px;min-height:40px;border-radius:4px;color:#777}.settle[aria-pressed=true]{color:#eee}.settle[aria-pressed=mixed]{color:#bbb}.states{padding:4px 0 8px 20px;margin-left:18px;border-left:1px solid #282828}.state-row{border-radius:4px;display:grid;grid-template-columns:minmax(0,1fr) 40px;align-items:center;min-width:0}.state-button{padding:10px 8px;text-align:left;line-height:1.5;font-size:12px;width:100%;border-radius:4px;color:#aaa;position:relative}.state-row:has(.state-button[aria-current=true]){background:#1c1c1c}.state-button[aria-current=true]{color:white}.state-button[aria-current=true]:before{content:"";position:absolute;width:2px;left:-21px;top:12px;bottom:12px;background:white}.state-row[data-settled=true] .state-button{color:#888}.state-row[data-settled=true] .state-button[aria-current=true]{color:#ddd}.storage-note{padding:0 24px 12px;color:var(--muted);font-size:11px}.section-row:hover,.state-row:hover{background:var(--hover)}.section-button:hover,.state-button:hover,.settle:hover{background:transparent}.settle:hover{color:#999}.settle[aria-pressed=true]:hover{color:#fff}.settle[aria-pressed=mixed]:hover{color:#ddd}
+.canvas{grid-column:2;display:flex;flex-direction:column;min-width:0;min-height:0;height:100dvh}.pane-header{height:var(--top-row-height);flex-shrink:0;display:flex;align-items:center;gap:8px;padding:0 0 0 24px;box-shadow:inset 0 -1px 0 var(--line);background:#080808}.pane-header nav{flex:1;min-width:0}.breadcrumb{display:flex;align-items:center;gap:8px;padding:0;margin:0;list-style:none;font-size:12px;color:var(--muted);min-width:0}.breadcrumb li{min-width:0;white-space:nowrap}.breadcrumb li:first-child{overflow:hidden;text-overflow:ellipsis;flex-shrink:0;max-width:45%}.breadcrumb li:last-child{display:flex;align-items:center;overflow:hidden;color:#ddd}.breadcrumb li+li:before{content:"/";color:#666;margin-right:8px}.breadcrumb [aria-current=page]{overflow:hidden;text-overflow:ellipsis}.view-toggle{width:40px;height:40px;flex-shrink:0;display:grid;place-items:center;color:#999;border-radius:4px}.view-toggle:hover{color:#fff}
+.preview-pane{flex:1;min-height:0;min-width:0;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}.variant{min-width:0;flex-shrink:0}.variant[data-active=false]{position:absolute;left:-100000px;top:0;visibility:hidden;pointer-events:none}.stage{position:relative;overflow:hidden;background:#0c0c0c}.frame-shell{position:absolute;top:0;left:0;transform-origin:0 0}.app-frame{display:block;border:0;background:#0c0c0c;width:100%;height:100%}.variant[data-variant=mobile] .stage{outline:1px solid #2b2b2b;outline-offset:-1px;border-radius:8px}.mobile-view .preview-pane{padding:16px}.preview-status{position:absolute;bottom:12px;left:12px;right:12px;font-size:12px;color:#bbb;white-space:pre-wrap;background:#080808;padding:8px;z-index:2}.preview-status:empty{display:none}.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+@media(max-width:760px){:root{--top-row-height:44px}.board,.sidebar-collapsed .board{grid-template-columns:44px minmax(0,1fr)}.sidebar{width:44px}.sidebar-visible .sidebar{position:fixed;left:0;top:0;bottom:0;width:268px;z-index:30;box-shadow:16px 0 32px rgb(0 0 0 / .25)}.sidebar-toggle,.view-toggle{width:44px;height:44px}.pane-header{padding:0 0 0 16px}button,.settle{min-height:44px}.section-row,.state-row{grid-template-columns:minmax(0,1fr) 44px}.settle{width:44px}}
+.sidebar-toggle,.view-toggle{position:relative;border-radius:8px;background:transparent}.sidebar-toggle::before,.view-toggle::before{content:"";position:absolute;inset:4px;border-radius:8px;background:var(--hover);opacity:0;pointer-events:none}.sidebar-toggle svg,.view-toggle svg{position:relative}.sidebar-toggle:hover,.view-toggle:hover{background:transparent}.sidebar-toggle:hover::before,.view-toggle:hover::before{opacity:1}.sidebar-toggle:focus-visible,.view-toggle:focus-visible{outline:none}.sidebar-toggle:focus-visible::before,.view-toggle:focus-visible::before{opacity:1;outline:2px solid white;outline-offset:-2px}
+</style>
+</head>
+<body>
+
+<div class="board">
+<aside class="sidebar" aria-label="Review navigation"><header class="sidebar-header"><h1>FlowView</h1><button id="sidebar-toggle" class="sidebar-toggle" aria-label="Collapse sidebar" aria-expanded="true" aria-controls="sections"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg></button></header><nav class="navigation" id="sections" aria-label="UI sections and states"></nav><p class="storage-note" id="storage-note" hidden>Review choices are available for this session only.</p></aside>
+<main class="canvas" aria-label="Screen review"><header class="pane-header"><nav aria-label="Breadcrumb"><ol class="breadcrumb" id="breadcrumb"></ol></nav><button id="view-toggle" class="view-toggle" aria-label="Switch to mobile view" title="Switch to mobile view" data-view="desktop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M10 18h4"/></svg></button></header><div class="preview-pane" id="preview-pane" role="region" aria-label="Desktop preview">
+<figure class="variant" data-variant="desktop" data-active="true"><div class="stage"><div class="frame-shell"><iframe class="app-frame" id="preview-desktop" title="Desktop preview" sandbox="allow-scripts allow-forms"></iframe></div></div><p class="preview-status" role="status"></p></figure>
+<figure class="variant" data-variant="mobile" data-active="false"><div class="stage"><div class="frame-shell"><iframe class="app-frame" id="preview-mobile" title="Mobile preview" sandbox="allow-scripts allow-forms"></iframe></div></div><p class="preview-status" role="status"></p></figure>
+</div></main>
+</div>
+<p id="announcement" class="sr-only" aria-live="polite"></p>
+<!-- BOARD_DATA -->
+<script>
+'use strict';
+const BOARD=JSON.parse(document.getElementById('board-data').textContent);
+/* RENDERER */
+const $=id=>document.getElementById(id),groups=BOARD.groups;
+const states=groups.flatMap(g=>g.states.map(s=>({...s,group:g})));
+const safe=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const icon=kind=>'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="8"/>'+(kind==='done'?'<path d="m8 12 3 3 5-6"/>':kind==='partial'?'<path d="M8 12h8"/>':'')+'</svg>';
+const chevron='<svg class="chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg>';
+const key='userflow-review:'+BOARD.id+':v1';let saved={};
+try{saved=JSON.parse(localStorage.getItem(key))||{};}catch{}
+const settled=new Set((Array.isArray(saved.settled)?saved.settled:states.filter(s=>s.settled).map(s=>s.id)).filter(id=>states.some(s=>s.id===id)));
+let selected=states.find(s=>s.id===location.hash.slice(1))||states.find(s=>s.id===saved.selected)||states.find(s=>s.id===BOARD.initialState)||states[0];
+const expanded=new Set((Array.isArray(saved.expanded)?saved.expanded:[selected.group.id]).filter(id=>groups.some(g=>g.id===id)));
+if(location.hash&&(!Array.isArray(saved.expanded)||selected.id!==saved.selected))expanded.add(selected.group.id);
+let instance=0,language=selected.language||BOARD.language||'en',sidebarCollapsed=saved.sidebarCollapsed===true,viewMode=saved.view==='mobile'?'mobile':'desktop';
+const variants=['desktop','mobile'].map(id=>({id,...({desktop:{width:1280,height:900},mobile:{width:390,height:844}}[id]),...BOARD.viewports?.[id],frame:$('preview-'+id),figure:document.querySelector('[data-variant="'+id+'"]')}));
+function persist(){try{localStorage.setItem(key,JSON.stringify({settled:[...settled],expanded:[...expanded],selected:selected.id,sidebarCollapsed,view:viewMode}));}catch{$('storage-note').hidden=false;}}
+function renderSidebar(focusId){
+ const offset=$('sections').scrollTop;
+ $('sections').innerHTML=groups.map(g=>{
+  const count=g.states.filter(s=>settled.has(s.id)).length,done=count===g.states.length;
+  return '<section class="section" data-group="'+g.id+'" data-current="'+(selected.group.id===g.id)+'" data-settled="'+done+'"><div class="section-row"><button class="section-button" id="group-'+g.id+'" data-expand="'+g.id+'" aria-expanded="'+expanded.has(g.id)+'" aria-controls="states-'+g.id+'">'+chevron+'<span class="section-name">'+safe(g.title)+'</span></button><button id="all-'+g.id+'" class="settle" data-all="'+g.id+'" aria-pressed="'+(done?'true':count?'mixed':'false')+'" aria-label="'+safe((done?'Reopen all in ':'Settle all in ')+g.title)+'" title="'+safe((done?'Reopen all':'Settle all')+' · '+g.title)+'">'+icon(done?'done':count?'partial':'open')+'</button></div><div class="states" id="states-'+g.id+'" '+(expanded.has(g.id)?'':'hidden')+'>'+g.states.map(s=>'<div class="state-row" data-settled="'+settled.has(s.id)+'"><button class="state-button" id="state-'+s.id+'" data-state="'+s.id+'" aria-current="'+(s.id===selected.id)+'">'+safe(s.name)+'</button><button class="settle" id="settle-'+s.id+'" data-settle="'+s.id+'" aria-pressed="'+settled.has(s.id)+'" aria-label="'+safe((settled.has(s.id)?'Reopen ':'Settle ')+s.name)+'" title="'+safe(settled.has(s.id)?'Reopen state':'Settle state')+'">'+icon(settled.has(s.id)?'done':'open')+'</button></div>').join('')+'</div></section>';
+ }).join('');
+ $('sections').scrollTop=offset;
+ if(focusId)$(focusId)?.focus({preventScroll:true});
+}
+function scalePreviews(){
+ const pane=$('preview-pane'),style=getComputedStyle(pane),availableWidth=Math.max(1,pane.clientWidth-parseFloat(style.paddingLeft)-parseFloat(style.paddingRight)),availableHeight=Math.max(1,pane.clientHeight-parseFloat(style.paddingTop)-parseFloat(style.paddingBottom));
+ for(const v of variants){
+  const stage=v.figure.querySelector('.stage'),shell=v.figure.querySelector('.frame-shell'),desktop=v.id==='desktop';
+  const width=desktop?Math.max(v.width,availableWidth):v.width,scale=desktop?availableWidth/width:Math.max(.01,Math.min(1,availableWidth/width,availableHeight/v.height)),height=desktop?availableHeight/scale:v.height;
+  v.figure.style.width=width*scale+'px';stage.style.width=width*scale+'px';stage.style.height=height*scale+'px';shell.style.width=width+'px';shell.style.height=height+'px';shell.style.transform='scale('+scale+')';
+ }
+}
+function protectedDocument(html){
+ const csp='<meta http-equiv="Content-Security-Policy" content="default-src \'none\'; script-src \'unsafe-inline\'; style-src \'unsafe-inline\'; img-src data:; connect-src \'none\'; form-action \'none\'">';
+ return /<head\b[^>]*>/i.test(html)?html.replace(/<head\b[^>]*>/i,m=>m+csp):'<head>'+csp+'</head>'+html;
+}
+function renderBreadcrumb(){
+ $('breadcrumb').innerHTML='<li>'+safe(selected.group.title)+'</li><li><span aria-current="page">'+safe(selected.name)+'</span></li>';
+}
+function renderPreviews(){
+ for(const v of variants){
+  clearTimeout(v.timeout);v.instance=++instance;v.figure.dataset.state='rendering';v.figure.querySelector('.preview-status').textContent='';
+  const previous=v.frame;v.frame=previous.cloneNode(false);v.frame.title=(v.id==='desktop'?'Desktop':'Mobile')+' · '+selected.name;
+  const token=v.instance;
+  v.frame.onload=()=>{if(v.instance===token&&!BOARD.readyMessages)v.figure.dataset.state='ready';};
+  v.timeout=setTimeout(()=>{if(v.instance===token&&v.figure.dataset.state==='rendering'){v.figure.dataset.state='error';v.figure.querySelector('.preview-status').textContent='Preview did not finish loading. Select the state again to retry.';}},12000);
+  try{v.frame.srcdoc=protectedDocument(renderPreview({...selected,language},v,v.instance));previous.replaceWith(v.frame);}
+  catch(error){v.figure.dataset.state='error';v.figure.querySelector('.preview-status').textContent=error.message;}
+ }
+ scalePreviews();
+ renderBreadcrumb();$('announcement').textContent=selected.group.title+' · '+selected.name+' · '+viewMode;
+}
+function choose(id,mode='push'){
+ const next=states.find(s=>s.id===id);if(!next)return;
+ selected=next;language=selected.language||language;expanded.add(selected.group.id);
+ if(mode==='push'&&location.hash!=='#'+id)history.pushState(null,'','#'+id);
+ renderSidebar();persist();renderPreviews();
+}
+$('sections').addEventListener('click',e=>{
+ const b=e.target.closest('button');if(!b)return;
+ if(b.dataset.expand){const id=b.dataset.expand;expanded.has(id)?expanded.delete(id):expanded.add(id);renderSidebar(b.id);persist();}
+ if(b.dataset.state){choose(b.dataset.state);$('state-'+selected.id)?.focus({preventScroll:true});}
+ if(b.dataset.settle){const id=b.dataset.settle;settled.has(id)?settled.delete(id):settled.add(id);renderSidebar(b.id);persist();}
+ if(b.dataset.all){const g=groups.find(g=>g.id===b.dataset.all),done=g.states.every(s=>settled.has(s.id));g.states.forEach(s=>done?settled.delete(s.id):settled.add(s.id));done?expanded.add(g.id):expanded.delete(g.id);renderSidebar(b.id);persist();}
+});
+function renderSidebarVisibility(){
+ document.body.classList.toggle('sidebar-collapsed',sidebarCollapsed);document.body.classList.toggle('sidebar-visible',!sidebarCollapsed);
+ $('sidebar-toggle').setAttribute('aria-expanded',String(!sidebarCollapsed));$('sidebar-toggle').setAttribute('aria-label',sidebarCollapsed?'Expand sidebar':'Collapse sidebar');$('sections').inert=sidebarCollapsed;
+ scalePreviews();
+}
+$('sidebar-toggle').addEventListener('click',()=>{sidebarCollapsed=!sidebarCollapsed;renderSidebarVisibility();persist();});
+function renderViewMode(){
+ document.body.classList.toggle('mobile-view',viewMode==='mobile');
+ for(const v of variants){const active=v.id===viewMode;v.figure.dataset.active=String(active);v.figure.inert=!active;v.figure.setAttribute('aria-hidden',String(!active));}
+ const control=$('view-toggle'),mobile=viewMode==='mobile';control.dataset.view=viewMode;control.setAttribute('aria-label',mobile?'Switch to desktop view':'Switch to mobile view');control.title=mobile?'Switch to desktop view':'Switch to mobile view';
+ control.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">'+(mobile?'<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M12 16v4m-4 0h8"/>':'<rect x="6" y="2" width="12" height="20" rx="2"/><path d="M10 18h4"/>')+'</svg>';
+ $('preview-pane').setAttribute('aria-label',mobile?'Mobile preview':'Desktop preview');scalePreviews();$('announcement').textContent=selected.group.title+' · '+selected.name+' · '+viewMode;
+}
+$('view-toggle').addEventListener('click',()=>{viewMode=viewMode==='desktop'?'mobile':'desktop';renderViewMode();persist();});
+window.addEventListener('resize',scalePreviews);
+window.addEventListener('hashchange',()=>choose(location.hash.slice(1),'none'));
+window.addEventListener('message',e=>{
+ const m=e.data,v=variants.find(v=>v.frame.contentWindow===e.source);
+ if(!v||!m?.review||m.screen!==selected.id||m.instance!==v.instance)return;
+ if(m.type==='ready'){clearTimeout(v.timeout);v.figure.dataset.state='ready';v.figure.querySelector('.preview-status').textContent='';}
+ if(m.type==='error'){clearTimeout(v.timeout);v.figure.dataset.state='error';v.figure.querySelector('.preview-status').textContent=m.text||'Preview unavailable';}
+ if(m.type==='confirmation')v.figure.querySelector('.preview-status').textContent=m.text;
+ if(m.type==='reset')renderPreviews();
+ if(m.type==='language'){language=m.value;renderPreviews();}
+ if(m.type==='navigate'){const target=states.find(s=>s.id===m.state||m.action&&s.action===m.action);if(target)choose(target.id);}
+});
+document.title=BOARD.title;
+new ResizeObserver(scalePreviews).observe($('preview-pane'));
+if(!location.hash)history.replaceState(null,'','#'+selected.id);
+renderSidebar();renderSidebarVisibility();renderViewMode();renderPreviews();persist();
+</script>
+</body>
+</html>
