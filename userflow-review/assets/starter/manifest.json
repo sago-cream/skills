@@ -1,0 +1,14 @@
+{
+  "id": "example-flow-review",
+  "title": "Example workspace",
+  "initialState": "workspace-default",
+  "groups": [{
+    "id": "workspace",
+    "title": "Workspace",
+    "states": [{
+      "id": "workspace-default",
+      "name": "Default",
+      "file": "screens/workspace.html"
+    }]
+  }]
+}
