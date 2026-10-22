@@ -10,6 +10,14 @@ Read only the reference relevant to the task: [typography](typography.md), [surf
 
 ## Core principles
 
+### Copy Restraint
+
+Do not add an eyebrow, subtitle, helper sentence, caption, or badge by default to every section, card, or control. Omit copy that repeats a heading, names an obvious component type, narrates a visible action, or describes what the layout already shows. For example, a “Projects” heading and “New project” button do not need “Manage your projects here.”
+
+Before finishing, review secondary text in the rendered interface. Mentally remove each item: would users lose information needed to distinguish options, understand a constraint or consequence, complete a task, or recover from an error? If not, remove it. If the text compensates for weak grouping or an unclear primary label, fix that structure first.
+
+Keep necessary field labels, units, status distinctions, and useful instructions. Preserve programmatic accessible names and relationships when removing visible duplication. Verify the result in the relevant narrow-screen and interaction states; layout must still communicate the grouping there.
+
 ### 1. Concentric Border Radius
 
 Outer radius = inner radius + padding. Mismatched radii on nested elements is the most common thing that makes interfaces feel off.

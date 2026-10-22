@@ -7,6 +7,8 @@ description: Build, polish, and review interfaces, styling, and motion using the
 
 Follow the user's scope and the project's existing design system. Identify its styling approach before suggesting changes; use its tokens, components, and libraries rather than introducing another system.
 
+Avoid unnecessary secondary labels and descriptions. Let layout, grouping, spacing, and clear primary labels explain the interface. Secondary copy must add information users need to choose, act, or recover; apply the removal test in [interface principles](references/polish.md) before finishing UI work.
+
 ## Load only what the task needs
 
 - For CSS, Sass, Tailwind, CSS-in-JS, or component-style changes, read [styling rules](references/styling.md). Apply these alongside any relevant visual or motion guidance.
