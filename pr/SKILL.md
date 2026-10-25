@@ -11,7 +11,7 @@ description: Review changes and publish one or more draft PRs. Use when asked to
 
 ## Scope
 
-- Assess whether the finished work belongs in one PR. Consider purpose, dependencies, reviewability, size, risk, and any other reason the changes would be better reviewed or shipped separately.
+- Assess whether the finished work belongs in one PR based on purpose, dependencies, reviewability, and risk. Size alone is not a reason to split: keep a large change together when it forms one coherent unit. Split only when meaningful boundaries make the changes better reviewed or shipped separately.
 - If the changes do not fit together, split them into as many coherent PRs as needed using your judgment. Explain the grouping and proceed without asking the user to choose routine boundaries; honor explicit scope constraints.
 - Preserve all intended finished work. Give independent changes separate branches from the preflight base; stack dependent PRs only when needed and state their order and dependencies. Keep each PR's diff focused on its own change and run this workflow, including preflight, review, checks, and publication, for each PR.
 
