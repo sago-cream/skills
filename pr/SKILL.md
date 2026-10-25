@@ -1,6 +1,6 @@
 ---
 name: pr
-description: Review changes and publish a draft PR. Use when asked to create or update a pull request.
+description: Review changes and publish one or more draft PRs. Use when asked to create or update a pull request.
 ---
 
 ## Preflight
@@ -8,6 +8,12 @@ description: Review changes and publish a draft PR. Use when asked to create or 
 - Run bundled `bash scripts/pr-preflight` from the target worktree before review; publication runs its own preflight.
 - For a default or spent branch, carry only intended commits onto a fresh branch from the reported base.
 - Publish only to the current branch's writable remote. Do not switch to a parent/upstream repository or create/sync a fork unless explicitly asked.
+
+## Scope
+
+- Assess whether the finished work belongs in one PR. Consider purpose, dependencies, reviewability, size, risk, and any other reason the changes would be better reviewed or shipped separately.
+- If the changes do not fit together, split them into as many coherent PRs as needed using your judgment. Explain the grouping and proceed without asking the user to choose routine boundaries; honor explicit scope constraints.
+- Preserve all intended finished work. Give independent changes separate branches from the preflight base; stack dependent PRs only when needed and state their order and dependencies. Keep each PR's diff focused on its own change and run this workflow, including preflight, review, checks, and publication, for each PR.
 
 ## Review
 
@@ -31,4 +37,4 @@ description: Review changes and publish a draft PR. Use when asked to create or 
 - Read the current draft description and preserve relevant content when updating. Publish with `bash scripts/pr-publish REVIEWED_BASE REVIEWED_HEAD TITLE < /tmp/pr-body.md`.
 - Wait for required checks on the published head. Fix failures caused by the change, commit, and return to Review.
 - Publish drafts by default. Mark ready or merge only when explicitly requested; reviewer requests, auto-merge, and review submissions require separate authorization.
-- Return the PR URL, verification status, and unresolved blockers.
+- Return every PR URL, its verification status, any dependencies, and unresolved blockers.
