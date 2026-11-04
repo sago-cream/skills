@@ -3,8 +3,8 @@ name: design-grind
 description: Use when the user says "design grind" or "design-grind"
 ---
 
-1. Establish scope and audience; follow the `design` skill. Address known issues and outstanding PR comments, then run relevant checks before review; skip fixes to implementation being replaced.
-2. Inventory and capture every meaningful state before editing, using `userflow-review` when available. Include applicable loading, empty, error, success, disabled, expanded, dialog, and keyboard states, plus relevant viewport and language variants. Verify fixtures against the actual app, label coverage gaps, and preserve baseline captures for before/after comparisons.
+1. Establish scope and audience; follow the `design` skill.
+2. Inventory and capture every meaningful state before editing. Include applicable loading, empty, error, success, disabled, expanded, dialog, and keyboard states, plus relevant viewport and language variants. Verify fixtures against the actual app, label coverage gaps, and preserve baseline captures for before/after comparisons.
 3. Use the requested reviewers; otherwise use three flagship models from different providers at high effort. Resolve available models and report unavailable reviewers instead of substituting. Run independent, read-only reviews in parallel, without nested reviewers or concurrent edits.
 4. Give reviewers the same audience, context, state catalog, and complete capture set from one revision. Request scores out of 10 for Typography, Hierarchy, Spacing & density, Color & contrast, Iconography, Consistency & polish, Clarity, and Overall, with state-linked findings, user impact, and suggestions. Withhold the passing target and previous scores.
 5. Implement useful suggestions, challenge disagreements with evidence, and track findings by stable ID as fixed, disputed, or declined with reasons. Preserve the design language and working behavior; resist scope creep.
