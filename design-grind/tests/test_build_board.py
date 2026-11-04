@@ -59,6 +59,19 @@ class BoardBuildTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'Duplicate'):
             self.build()
 
+    def test_stages_pack_assets_and_validate_annotations(self):
+        pair = self.data['changes'][0]['variants']
+        pair['desktop']['after']['arrows'] = [{'x':4,'y':4,'labelX':0,'labelY':0,'label':'Gap'}]
+        self.data['changes'][0]['stages'] = [{'id':'start','label':'Start','variants':pair}]
+        _, data = self.build()
+        self.assertEqual(len(data['assets']),1)
+        image = data['changes'][0]['stages'][0]['variants']['desktop']['after']
+        self.assertIn('asset',image)
+        self.assertEqual(image['arrows'][0]['label'],'Gap')
+        pair['desktop']['after']['arrows'][0]['x'] = 9
+        with self.assertRaisesRegex(ValueError,'arrow'):
+            self.build()
+
     def test_unpaired_or_out_of_bounds_capture_is_rejected(self):
         del self.data['changes'][0]['variants']['desktop']['after']
         with self.assertRaisesRegex(ValueError, 'both'):

@@ -33,7 +33,7 @@ let filter = FILTERS.includes(stored.filter) ? stored.filter : (BOARD.initialFil
 let selected = byId.get(location.hash.slice(1)) || byId.get(stored.selected) || byId.get(BOARD.initialChange) || items[0];
 let device = stored.device === 'mobile' ? 'mobile' : 'desktop';
 let side = ['before','after','both'].includes(stored.side) ? stored.side : (matchMedia('(max-width:480px)').matches ? 'after' : 'both');
-let fullContext = false, holdingBefore = false;
+let fullContext = false, holdingBefore = false, stageIndex = 0, arrowsOn = stored.arrowsOn !== false;
 const undo = [];
 let browserSaved = false, fileHandle = null, rememberedHandle = null, fileError = '', saveGeneration = 0;
 let writes = Promise.resolve();
@@ -48,11 +48,17 @@ function matches(item) {
   return d.choice === filter && !stale(item);
 }
 function visible() { return items.filter(matches); }
+function navigationTarget(direction) {
+  const list = visible(), current = items.indexOf(selected);
+  const next = direction > 0 ? list.find(item => items.indexOf(item) > current) : [...list].reverse().find(item => items.indexOf(item) < current);
+  return next || (filter === 'pending' ? (direction > 0 ? list[0] : list.at(-1)) : null);
+}
 function record() {
   return {schemaVersion:1, boardId:BOARD.id, revision:BOARD.revision || null,
     decisions:Object.fromEntries(items.filter(item => decisions[item.id]).map(item => [item.id, decisions[item.id]]))};
 }
 function setMessage(text) { $('message').textContent = text; }
+function setRecordMessage(text) { $('record-message').textContent = text; }
 function saveStatus(text, error = false) {
   $('save-status').textContent = text;
   $('save-status').dataset.error = String(error);
@@ -60,7 +66,7 @@ function saveStatus(text, error = false) {
 function persist(writeFile = true) {
   try {
     localStorage.setItem(key, JSON.stringify({decisions, filter, selected:selected?.id,
-      device, side}));
+      device, side, arrowsOn}));
     browserSaved = true;
   } catch { browserSaved = false; }
   if (!fileHandle || !writeFile) {
@@ -106,7 +112,8 @@ function renderNav() {
   const active = $('change-list').querySelector('[aria-current=true]');
   if (active && $('sidebar').clientHeight) {
     const row = active.getBoundingClientRect(), pane = $('sidebar').getBoundingClientRect();
-    if (row.top < pane.top) $('sidebar').scrollTop += row.top - pane.top;
+    const top = pane.top + document.querySelector('.side-tools').offsetHeight;
+    if (row.top < top) $('sidebar').scrollTop += row.top - top;
     else if (row.bottom > pane.bottom) $('sidebar').scrollTop += row.bottom - pane.bottom;
   }
 }
@@ -115,7 +122,10 @@ function renderComparison() {
   container.dataset.side = side;
   container.dataset.device = device;
   if (!selected) return;
-  const pair = selected.variants?.[device];
+  const pair = selected.stages?.length ? selected.stages[stageIndex]?.variants?.[device] : selected.variants?.[device];
+  const hasArrows = pair && ['before','after'].some(side => pair[side]?.arrows?.length);
+  $('arrows').hidden = !hasArrows;
+  $('arrows').setAttribute('aria-pressed',String(arrowsOn));
   if (!pair && selected.kind !== 'evidence') {
     container.innerHTML = '<p class="unavailable">No ' + (device === 'mobile' ? 'phone' : 'desktop') + ' capture for this change.</p>';
     return;
@@ -125,9 +135,19 @@ function renderComparison() {
     const label = shown === 'before' ? 'Before' : 'After';
     const image = pair?.[shown];
     const crop = image && (fullContext ? [0,0,image.width,image.height] : image.crop);
+    const annotations = image && arrowsOn ? (image.arrows || []).map((arrow,index) => {
+      const id = 'arrow-' + selected.id + '-' + slot + '-' + stageIndex + '-' + index;
+      const width = Math.max(56,arrow.label.length * 6.8 + 16);
+      const startX = arrow.labelX + width / 2, startY = arrow.labelY + 22;
+      return '<g class="annotation" pointer-events="none"><defs><marker id="' + id + '" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#6d28d9"/></marker></defs>' +
+        '<path d="M' + startX + ',' + startY + ' L' + arrow.x + ',' + arrow.y + '" fill="none" stroke="white" stroke-width="5" vector-effect="non-scaling-stroke"/>' +
+        '<path d="M' + startX + ',' + startY + ' L' + arrow.x + ',' + arrow.y + '" fill="none" stroke="#6d28d9" stroke-width="2" vector-effect="non-scaling-stroke" marker-end="url(#' + id + ')"/>' +
+        '<rect x="' + arrow.labelX + '" y="' + arrow.labelY + '" width="' + width + '" height="22" rx="4" fill="#6d28d9"/>' +
+        '<text x="' + (arrow.labelX + 8) + '" y="' + (arrow.labelY + 15) + '" font-family="system-ui,sans-serif" font-size="12" font-weight="600" fill="white">' + safe(arrow.label) + '</text></g>';
+    }).join('') : '';
     const body = image ? '<svg role="img" aria-label="' + label + ': ' + safe(selected.title) +
       '" viewBox="' + crop.join(' ') + '"><image href="' + BOARD.assets[image.asset] +
-      '" width="' + image.width + '" height="' + image.height + '"/></svg>' :
+      '" width="' + image.width + '" height="' + image.height + '"/>' + annotations + '</svg>' :
       '<p class="text-evidence">' + safe(shown === 'before' ? selected.beforeText : selected.afterText) + '</p>';
     return '<figure class="capture" data-side="' + slot + '"><figcaption><strong>' + label + '</strong><span>' +
       (image ? image.width + ' × ' + image.height : 'Text evidence') + '</span></figcaption>' + body + '</figure>';
@@ -136,6 +156,7 @@ function renderComparison() {
 function render() {
   renderNav();
   const empty = !selected;
+  document.querySelector('.change-heading').hidden = empty;
   $('review-content').hidden = empty;
   $('empty').hidden = !empty;
   $('change-title').textContent = selected?.title || (filter === 'pending' ? 'All decisions reviewed' : 'No matching changes');
@@ -148,6 +169,10 @@ function render() {
   $('empty-title').textContent = filter === 'pending' ? 'No decisions left' : 'Nothing in this filter';
   $('empty-copy').textContent = filter === 'pending' ? 'You can revisit any choice or export the record.' : 'Your decisions and notes are preserved.';
   $('undo').disabled = !undo.length;
+  $('prev').disabled = !navigationTarget(-1) || navigationTarget(-1) === selected;
+  const next = navigationTarget(1), finish = selected && filter === 'pending' && !list.length;
+  $('next').disabled = !finish && (!next || next === selected);
+  $('next').innerHTML = (finish ? 'Finish' : 'Next') + ' <kbd>J</kbd>';
   if (!selected) return;
   const d = decision(selected);
   document.querySelectorAll('[data-choice]').forEach(button => {
@@ -164,11 +189,15 @@ function render() {
   $('context-toggle').setAttribute('aria-pressed', String(fullContext));
   $('context-toggle').innerHTML = (fullContext ? 'Detail' : 'Full context') + ' <kbd>C</kbd>';
   $('context-toggle').disabled = selected.kind === 'evidence';
+  $('stage-controls').hidden = !(selected.stages?.length > 1);
+  $('stage-controls').innerHTML = (selected.stages || []).map((stage,index) => '<button data-stage="' + index + '" aria-pressed="' + (index === stageIndex) + '">' + safe(stage.label) + '</button>').join('');
   renderComparison();
   $('announcement').textContent = selected.group + ': ' + selected.title;
 }
 function choose(id) {
+  setMessage('');
   selected = byId.get(id) || null;
+  stageIndex = 0;
   holdingBefore = false;
   $('context').open = false;
   if (selected) {
@@ -180,23 +209,23 @@ function choose(id) {
 function move(direction) {
   const list = visible();
   if (!list.length) { choose(null); return; }
-  const current = items.indexOf(selected);
-  const next = direction > 0 ? list.find(item => items.indexOf(item) > current) : [...list].reverse().find(item => items.indexOf(item) < current);
+  const next = navigationTarget(direction);
   if (next) choose(next.id);
-  else if (filter === 'pending') choose((direction > 0 ? list[0] : list.at(-1)).id);
 }
 function decide(choice) {
   if (!selected) return;
+  setRecordMessage('');
   clearTimeout(noteTimer);
   undo.push({id:selected.id, previous:decisions[selected.id] ? {...decisions[selected.id]} : null});
   decisions[selected.id] = {...decision(selected), choice, fingerprint:selected.fingerprint, updatedAt:new Date().toISOString()};
-  setMessage((choice === 'accept' ? 'Accepted' : 'Declined') + ' · J for next');
+  setMessage(choice === 'accept' ? 'Accepted' : 'Declined');
   render();
   persist();
 }
 function undoDecision() {
   const change = undo.pop();
   if (!change) return;
+  setRecordMessage('');
   const latestNote = decisions[change.id]?.note || '';
   if (change.previous) decisions[change.id] = {...change.previous, note:latestNote};
   else if (latestNote) decisions[change.id] = {choice:null,note:latestNote,fingerprint:'',updatedAt:new Date().toISOString()};
@@ -224,6 +253,7 @@ $('undo').onclick = undoDecision;
 $('show-all').onclick = () => setFilter('all');
 $('note').oninput = () => {
   if (!selected) return;
+  setRecordMessage('');
   decisions[selected.id] = {...decision(selected), note:$('note').value.slice(0,12000), updatedAt:new Date().toISOString()};
   // A note never reconfirms an outdated accept/decline choice.
   renderNav();
@@ -241,6 +271,8 @@ $('menu').onclick = () => {
 for (const name of ['desktop','mobile']) $(name).onclick = () => { device = name; render(); persist(false); };
 for (const name of ['before','after','both']) $('side-' + name).onclick = () => { side = name; render(); persist(false); };
 $('context-toggle').onclick = () => { fullContext = !fullContext; render(); };
+$('arrows').onclick = () => { arrowsOn = !arrowsOn; render(); persist(false); };
+$('stage-controls').onclick = event => { const button = event.target.closest('[data-stage]'); if (button) {stageIndex = Number(button.dataset.stage); render();} };
 $('help').onclick = () => $('shortcuts').showModal();
 $('close-help').onclick = () => $('shortcuts').close();
 document.addEventListener('keydown', event => {
@@ -254,7 +286,9 @@ document.addEventListener('keydown', event => {
   const action = {'1':() => decide('accept'),'2':() => decide('decline'),
     j:() => move(1),k:() => move(-1),arrowright:() => move(1),arrowleft:() => move(-1),
     n:() => $('note').focus(),z:undoDecision,m:() => {device = device === 'desktop' ? 'mobile' : 'desktop'; render(); persist(false);},
-    c:() => {fullContext = !fullContext; render();},u:() => setFilter('pending'),'?':() => $('shortcuts').showModal()}[key];
+    c:() => {fullContext = !fullContext; render();},a:() => {arrowsOn = !arrowsOn; render(); persist(false);},
+    s:() => {if (selected?.stages?.length) {stageIndex = (stageIndex + 1) % selected.stages.length; render();}},
+    u:() => setFilter('pending'),'?':() => $('shortcuts').showModal()}[key];
   if (action) { event.preventDefault(); action(); }
   else if (event.code === 'Space' && !event.target.closest('button,a,summary')) {
     event.preventDefault(); holdingBefore = true; renderComparison();
@@ -269,6 +303,7 @@ $('export').onclick = () => {
   const url = URL.createObjectURL(new Blob([JSON.stringify(record(),null,2)+'\n'],{type:'application/json'}));
   const link = document.createElement('a');
   link.href = url; link.download = BOARD.id + '-decisions.json'; link.click();
+  setRecordMessage('Decision record download started');
   setTimeout(() => URL.revokeObjectURL(url),1000);
 };
 $('import').onclick = () => $('import-file').click();
@@ -280,8 +315,8 @@ $('import-file').onchange = async event => {
     if (data.schemaVersion !== 1 || data.boardId !== BOARD.id) throw new Error('This record belongs to another board or format');
     const incoming = cleanDecisions(data.decisions);
     decisions = Object.assign(Object.create(null), decisions, incoming);
-    render(); persist(); setMessage('Decision record imported');
-  } catch (error) { setMessage('Import failed: ' + error.message); }
+    render(); persist(); setRecordMessage('Decision record imported');
+  } catch (error) { setRecordMessage('Import failed: ' + error.message); }
   event.target.value = '';
 };
 function handleStore(mode, value) {
@@ -313,6 +348,7 @@ async function attachFile(handle, writeNow) {
     }
   }
   fileHandle = handle; rememberedHandle = handle; fileError = '';
+  setRecordMessage('');
   render();
   persist(writeNow);
   if (!writeNow) saveStatus('File connected · ' + handle.name);
@@ -325,13 +361,17 @@ $('connect').onclick = async () => {
       if (permission !== 'granted') handle = null;
     }
     if (!handle) {
-      if (!window.showSaveFilePicker) { setMessage('File autosave needs Chrome or Edge. Export a JSON record here.'); return; }
+      if (!window.showSaveFilePicker) { setRecordMessage('File autosave needs Chrome or Edge. Export a JSON record here.'); return; }
       handle = await showSaveFilePicker({startIn:'downloads',suggestedName:BOARD.id+'-decisions.json',types:[{description:'Decision record',accept:{'application/json':['.json']}}]});
     }
     await attachFile(handle,true);
     handleStore('readwrite',handle).catch(() => {});
-  } catch (error) { if (error.name !== 'AbortError') setMessage('File not connected: ' + error.message + '. Use Export to save separately.'); }
+  } catch (error) { if (error.name !== 'AbortError') setRecordMessage('File not connected: ' + error.message + '. Use Export decisions to save separately.'); }
 };
+const supportsFileSaving = typeof window.showSaveFilePicker === 'function' && window.isSecureContext;
+$('connect').hidden = !supportsFileSaving;
+$('connect').classList.toggle('record-primary',supportsFileSaving);
+$('export').classList.toggle('record-primary',!supportsFileSaving);
 handleStore('readonly').then(async handle => {
   if (!handle) return;
   rememberedHandle = handle;

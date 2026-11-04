@@ -14,8 +14,43 @@ def identifier(value):
         raise ValueError(f'Invalid stable ID: {value!r}')
 
 
-def build(manifest, output):
+def pack_variants(variants, change_id, base_dir, assets):
     import base64
+    if not isinstance(variants, dict) or set(variants) - {'desktop', 'mobile'}:
+        raise ValueError('Variants must be desktop or mobile')
+    for name, pair in variants.items():
+        if set(pair) != {'before', 'after'}:
+            raise ValueError(f'{change_id}/{name}: provide both before and after')
+        for side, image in pair.items():
+            path = base_dir / image.pop('file')
+            mime = IMAGE_TYPES.get(path.suffix.lower())
+            if not mime:
+                raise ValueError(f'Unsupported screenshot type: {path.suffix}')
+            raw = path.read_bytes()
+            digest = hashlib.sha256(raw).hexdigest()
+            assets[digest] = f'data:{mime};base64,' + base64.b64encode(raw).decode('ascii')
+            image['asset'] = digest
+            width, height = image.get('width'), image.get('height')
+            if not all(isinstance(v, (int, float)) and not isinstance(v, bool) and v > 0
+                       for v in (width, height)):
+                raise ValueError(f'{change_id}: capture dimensions must be positive')
+            crop = image.get('crop', [0, 0, width, height])
+            if (not isinstance(crop, list) or len(crop) != 4 or
+                not all(isinstance(v, (int, float)) and not isinstance(v, bool) for v in crop) or
+                min(crop) < 0 or min(crop[2:]) <= 0 or
+                crop[0] + crop[2] > width or crop[1] + crop[3] > height):
+                raise ValueError(f'{change_id}: crop must fit the capture')
+            image['crop'] = crop
+            for arrow in image.get('arrows', []):
+                for field, limit in [('x', width), ('y', height), ('labelX', width), ('labelY', height)]:
+                    value = arrow.get(field)
+                    if not isinstance(value, (int, float)) or isinstance(value, bool) or not 0 <= value <= limit:
+                        raise ValueError(f'{change_id}: arrow {field} must fit the capture')
+                if not isinstance(arrow.get('label'), str) or not 1 <= len(arrow['label']) <= 60:
+                    raise ValueError(f'{change_id}: arrow label must contain 1–60 characters')
+
+
+def build(manifest, output):
     manifest, output = Path(manifest), Path(output)
     data = json.loads(manifest.read_text(encoding='utf-8'))
     identifier(data.get('id'))
@@ -37,34 +72,21 @@ def build(manifest, output):
             if not isinstance(change.get(field), str) or not change[field].strip():
                 raise ValueError(f'{change["id"]}: {field} must be nonempty')
         variants = change.get('variants', {})
-        if set(variants) - {'desktop', 'mobile'}:
-            raise ValueError('Variants must be desktop or mobile')
-        if not variants and change.get('kind') != 'evidence':
+        stages = change.get('stages', [])
+        if not isinstance(stages, list):
+            raise ValueError('stages must be a list')
+        stage_ids = set()
+        for stage in stages:
+            identifier(stage.get('id'))
+            if stage['id'] in stage_ids or not isinstance(stage.get('label'), str) or not stage['label'].strip():
+                raise ValueError('Stages need unique IDs and labels')
+            stage_ids.add(stage['id'])
+            if not stage.get('variants'):
+                raise ValueError('Stages need screenshot variants')
+            pack_variants(stage['variants'], change['id'], manifest.parent, assets)
+        if not variants and not stages and change.get('kind') != 'evidence':
             raise ValueError(f'{change["id"]}: provide captures or use kind evidence')
-        for name, pair in variants.items():
-            if set(pair) != {'before', 'after'}:
-                raise ValueError(f'{change["id"]}/{name}: provide both before and after')
-            for side, image in pair.items():
-                path = manifest.parent / image.pop('file')
-                mime = IMAGE_TYPES.get(path.suffix.lower())
-                if not mime:
-                    raise ValueError(f'Unsupported screenshot type: {path.suffix}')
-                raw = path.read_bytes()
-                # SVG previews are nested images, never executable inline markup.
-                digest = hashlib.sha256(raw).hexdigest()
-                assets[digest] = f'data:{mime};base64,' + base64.b64encode(raw).decode('ascii')
-                image['asset'] = digest
-                width, height = image.get('width'), image.get('height')
-                if not all(isinstance(v, (int, float)) and not isinstance(v, bool) and v > 0
-                           for v in (width, height)):
-                    raise ValueError(f'{change["id"]}: capture dimensions must be positive')
-                crop = image.get('crop', [0, 0, width, height])
-                if (not isinstance(crop, list) or len(crop) != 4 or
-                    not all(isinstance(v, (int, float)) and not isinstance(v, bool) for v in crop) or
-                    min(crop) < 0 or min(crop[2:]) <= 0 or
-                    crop[0] + crop[2] > width or crop[1] + crop[3] > height):
-                    raise ValueError(f'{change["id"]}: crop must fit the capture')
-                image['crop'] = crop
+        pack_variants(variants, change['id'], manifest.parent, assets)
         content = {k: v for k, v in change.items() if k not in ('decision', 'fingerprint')}
         change['fingerprint'] = hashlib.sha256(json.dumps(content, sort_keys=True,
             ensure_ascii=False, separators=(',', ':'), allow_nan=False).encode()).hexdigest()

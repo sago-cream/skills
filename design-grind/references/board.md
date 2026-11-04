@@ -38,6 +38,8 @@ The output is one offline HTML file with embedded, deduplicated screenshots. Ide
 - Each change is one accept/decline decision. Keep the title and reason brief; use `context` for evidence limitations and coupling to other changes. Notes belong to the user and are available regardless of the decision.
 - `kind` is `visual`, `behavior`, or `evidence`. Supporting evidence may omit screenshots; the viewer shows its before/after text. A screenshot does not prove behavior.
 - `variants` accepts `desktop` and `mobile`; each provided variant needs both sides. Missing variants are shown as unavailable, never substituted. PNG/JPEG/WebP/SVG paths resolve from the manifest directory. Dimensions describe the actual capture; optional crops use `[x, y, width, height]`. Full context shows the unchanged original image.
+- An image may include `arrows: [{x, y, labelX, labelY, label}]`, in original capture coordinates. Keep labels within the crop. Arrows overlay the original and can be hidden for inspection.
+- For captured stages of the same decision, supply `stages: [{id, label, variants}]`, such as Start/End scroll positions. Each stage uses the same variant schema. Switching stages preserves the decision and note; use separate changes for independent decisions.
 - Optional `sourceUrl` links to source code. `initialChange` selects an existing ID; `initialFilter` is `pending` (default), `all`, `accept`, `decline`, or `notes`.
 - The builder fingerprints each change's evidence and meaning. Changed comparisons reopen prior choices while preserving the old decision and note. Unchanged IDs and evidence keep their choices.
 
@@ -45,8 +47,8 @@ The output is one offline HTML file with embedded, deduplicated screenshots. Ide
 
 The grouped list locates changes; the purpose line explains the benefit; detail/context views support inspection. Accept/Decline records a decision without navigating away. Notes are independent. Next/previous, filters, and undo make it easy to review the remainder and revisit choices. There is no bulk acceptance.
 
-Keys: `1` accept, `2` decline, `J/K` next/previous, hold `Space` to show before, `N` note, `Z` undo, `M` device, `C` full context, `U` pending, `?` help. Shortcuts do not run while typing or using native select controls; Tab remains native.
+Keys: `1` accept, `2` decline, `J/K` next/previous, hold `Space` to show before, `N` note, `Z` undo, `M` device, `C` full context, `A` arrows, `S` next captured stage, `U` pending, `?` help. Shortcuts do not run while typing or using native select controls; Tab remains native.
 
-Browser autosave is local to that browser and origin. **Save to file** connects a user-chosen JSON file for automatic, agent-readable saves in supported Chrome/Edge contexts. Existing records are read and merged before writing; another board's record is rejected. The visible status distinguishes browser saving, file saving, and failure. Export/Import provides a fallback when file access is unavailable; never claim browser-only saving is shared or agent-readable.
+Browser autosave is local to that browser and origin. **Save to file** appears when the browser supports connecting a user-chosen JSON file for automatic, agent-readable saves. Existing records are read and merged before writing; another board's record is rejected. The visible status distinguishes browser saving, file saving, and failure. **Export decisions** downloads the record when file access is unavailable; never claim browser-only saving is shared or agent-readable.
 
 Decision JSON contains `schemaVersion: 1`, `boardId`, `revision`, and `decisions` keyed by change ID. Each decision has `choice` (`accept`, `decline`, or null), `note`, `fingerprint`, and `updatedAt`. A note is not a third decision state. Use the record to apply selections, revise proposals from notes, and rebuild with the same IDs; verify the selected combination. Do not overwrite the user's source record when making a demonstration board.

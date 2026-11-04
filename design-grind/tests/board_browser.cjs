@@ -31,6 +31,8 @@ const {pathToFileURL} = require('node:url');
     assert.equal(await page.locator('button[data-choice=accept]').getAttribute('aria-pressed'),'true');
     assert.equal(await page.locator('#note').inputValue(),'A thought before deciding: 1 j z');
     await page.keyboard.press('j');
+    assert.equal(await page.locator('#message').textContent(),'');
+    assert.match(await page.locator('#next').textContent(),/Next/);
     const second = await page.locator('.nav-item[aria-current=true]').getAttribute('data-id');
     assert.notEqual(second,first);
     await page.keyboard.press('2');
@@ -59,7 +61,7 @@ const {pathToFileURL} = require('node:url');
     await page.locator('#note').fill('Note does not reconfirm a changed comparison');
     assert.equal(await page.locator('#stale').isVisible(),true);
     await page.locator('#import-file').setInputFiles({name:'wrong.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify({schemaVersion:1,boardId:'another-board',decisions:{}}))});
-    assert.match(await page.locator('#message').textContent(),/Import failed/);
+    assert.match(await page.locator('#record-message').textContent(),/Import failed/);
     assert.equal(await page.locator('#note').inputValue(),'Note does not reconfirm a changed comparison');
     await page.evaluate(() => {
       window.fileWrites = [];
@@ -72,7 +74,32 @@ const {pathToFileURL} = require('node:url');
     await page.waitForFunction(() => window.fileWrites.at(-1)?.includes('Durable independent thought'));
     const saved = await page.evaluate(() => JSON.parse(window.fileWrites.at(-1)));
     assert.equal(saved.decisions[first].note,'Durable independent thought');
+    const download = page.waitForEvent('download');
     await page.locator('#export').click();
+    assert.match((await download).suggestedFilename(),/\.json$/);
+    assert.equal(await page.locator('#record-message').textContent(),'Decision record download started');
+    await page.locator('#note').fill('Thought added after export');
+    assert.equal(await page.locator('#record-message').textContent(),'');
+    const annotated = data.changes.find(change => Object.values(change.variants || {}).some(pair => pair.before.arrows?.length || pair.after.arrows?.length));
+    if (annotated) {
+      await page.locator(`[data-id="${annotated.id}"]`).click();
+      await page.locator('#desktop').click();
+      const images = await page.locator('#comparison image').evaluateAll(nodes=>nodes.map(node=>node.getAttribute('href')));
+      assert.ok(await page.locator('.annotation').count());
+      await page.keyboard.press('a');
+      assert.equal(await page.locator('.annotation').count(),0);
+      assert.deepEqual(await page.locator('#comparison image').evaluateAll(nodes=>nodes.map(node=>node.getAttribute('href'))),images);
+      await page.keyboard.press('a');
+    }
+    const staged = data.changes.find(change=>change.stages?.length > 1);
+    if (staged) {
+      await page.locator(`[data-id="${staged.id}"]`).click();
+      await page.locator('#note').fill('One thought across captured stages');
+      await page.keyboard.press('Escape');
+      await page.keyboard.press('s');
+      assert.equal(await page.locator('[data-stage="1"]').getAttribute('aria-pressed'),'true');
+      assert.equal(await page.locator('#note').inputValue(),'One thought across captured stages');
+    }
     // Check all real example changes in both screenshot modes and a narrow viewport.
     const ids = data.changes.map(change => change.id);
     for (const device of ['desktop','mobile']) {
@@ -96,6 +123,25 @@ const {pathToFileURL} = require('node:url');
     assert.match(await blocked.locator('#save-status').textContent(),/Session only/);
     await blocked.keyboard.press('1');
     assert.equal(await blocked.locator('button[data-choice=accept]').getAttribute('aria-pressed'),'true');
+    const unsupported = await context.newPage();
+    await unsupported.addInitScript(() => {window.showSaveFilePicker=undefined;});
+    await unsupported.goto(pathToFileURL(target).href);
+    assert.equal(await unsupported.locator('#connect').isVisible(),false);
+    assert.equal(await unsupported.locator('#export').textContent(),'Export decisions');
+    const complete = {...saved,decisions:Object.fromEntries(data.changes.map(change=>[change.id,{choice:'accept',note:'',fingerprint:change.fingerprint,updatedAt:new Date().toISOString()}]))};
+    delete complete.decisions[data.changes.at(-1).id];
+    await unsupported.locator('#import-file').setInputFiles({name:'complete.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(complete))});
+    await unsupported.locator('#filter').selectOption('pending');
+    await unsupported.locator('[data-choice=accept]').click();
+    assert.match(await unsupported.locator('#next').textContent(),/Finish/);
+    await unsupported.locator('#next').click();
+    assert.equal(await unsupported.locator('#empty').isVisible(),true);
+    assert.equal(await unsupported.locator('#save-status').isVisible(),true);
+    const completedDownload=unsupported.waitForEvent('download');
+    await unsupported.locator('#export').click();
+    await completedDownload;
+    assert.equal(await unsupported.locator('#record-message').isVisible(),true);
+    assert.equal(await unsupported.locator('#record-message').textContent(),'Decision record download started');
     assert.deepEqual(errors,[]);
     console.log(JSON.stringify({result:'PASS',changes:ids.length,devices:2,checks:['keyboard','notes','undo','reload','changed evidence','import isolation','file autosave','storage failure','responsive layout']}));
     await context.close();
