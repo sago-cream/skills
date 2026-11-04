@@ -27,6 +27,7 @@ npx skills add sago-cream/skills -g
 
 ### Better Codebase Architecture
 
+- [$slot-machine](https://github.com/sago-cream/skills/tree/main/slot-machine): Finds and implements meaningful improvements across the codebase.
 - [$improve-codebase-architecture](https://github.com/sago-cream/skills/tree/main/improve-codebase-architecture): Combines Matt Pocock’s deep-module guidance and visual architecture review without the grilling loop.
 - [$improve-codebase-layout](https://github.com/sago-cream/skills/tree/main/improve-codebase-layout): Rearranges files and folders for newcomer navigation without redesigning modules.
 
