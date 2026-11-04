@@ -1,0 +1,5 @@
+interface:
+  display_name: "Slot Machine"
+  short_description: "Find and implement meaningful codebase improvements"
+policy:
+  allow_implicit_invocation: true
