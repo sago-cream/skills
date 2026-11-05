@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>Design decisions</title>
+<style>/* BOARD_CSS */</style>
+</head>
+<body>
+<div class="review-app">
+  <header class="toolbar">
+    <button id="menu" aria-label="Toggle change list" aria-expanded="false" aria-controls="sidebar" title="Change list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg></button>
+    <strong id="board-title"></strong><span id="progress" class="muted"></span>
+    <button id="export">Export<span class="export-dot" aria-hidden="true"></span></button>
+  </header>
+  <div class="workspace">
+    <aside id="sidebar" aria-label="Changes"><div class="side-tools"><label class="sr-only" for="filter">Filter changes</label><select id="filter"><option value="pending">Needs decision</option><option value="all">All changes</option><option value="accept">Accepted</option><option value="decline">Declined</option><option value="notes">With notes</option></select></div><nav id="change-list" aria-label="Changes by section"></nav></aside>
+    <main id="main">
+      <div class="change-heading"><div class="heading-top"><span id="section" class="muted"></span><span id="position" class="muted"></span></div><h1 id="change-title"></h1><p id="reason"></p><p id="stale" role="status" hidden>Comparison updated. Review this decision again; your previous choice and note are preserved.</p></div>
+      <div id="review-content">
+        <div class="view-tools"><div role="group" aria-label="Screenshot size"><button id="desktop" aria-pressed="true">Desktop</button><button id="mobile" aria-pressed="false">Phone <kbd>M</kbd></button></div><div id="stage-controls" role="group" aria-label="Captured state" hidden></div><button id="arrows" aria-pressed="true" hidden>Arrows <kbd>A</kbd></button><button id="context-toggle" aria-pressed="false">Full context <kbd>C</kbd></button></div>
+        <div id="comparison" class="comparison" tabindex="0" aria-label="Before and after"></div>
+        <details id="context"><summary>Context</summary><div class="context-grid"><div><strong>Before</strong><p id="before-text"></p></div><div><strong>After</strong><p id="after-text"></p></div></div><p id="evidence-note"></p><a id="source" target="_blank" rel="noreferrer">Source</a></details>
+        <footer class="decision-panel">
+          <div class="decision-row"><div class="decision-actions" role="group" aria-label="Decision"><button data-choice="accept" aria-pressed="false">Accept <kbd>1</kbd></button><button data-choice="decline" aria-pressed="false">Decline <kbd>2</kbd></button></div><div class="steps"><button id="prev">Previous <kbd>J</kbd></button><button id="next">Next <kbd>K</kbd></button></div></div>
+          <label class="sr-only" for="note">Note for this change</label><textarea id="note" rows="2" placeholder="Add a note… (N)"></textarea>
+        </footer>
+      </div>
+      <div id="empty" hidden><h1 id="empty-title">No decisions left</h1><p id="empty-copy"></p><button id="show-all">View all changes</button></div>
+    </main>
+  </div>
+</div>
+<p id="announcement" class="sr-only" aria-live="polite"></p>
+<!-- BOARD_DATA -->
+<script>/* BOARD_JS */</script>
+</body>
+</html>
