@@ -47,7 +47,7 @@ The output is one offline HTML file with embedded, deduplicated screenshots. Ide
 
 The grouped list locates changes; the purpose line explains the benefit; detail/context views support inspection. Accept/Decline records a decision without navigating away. Notes are independent. Next/previous and filters make it easy to review the remainder and revisit choices. There is no bulk acceptance.
 
-Keys: `1` accept, `2` decline, `J/K` next/previous, hold `Space` to show before, `N` note, `M` device, `C` full context, `A` arrows, `S` next captured stage, `U` pending. Shortcuts do not run while typing or using native select controls; Tab remains native.
+Keys: `1` accept, `2` decline, `J/K` previous/next, hold `Space` to show before, `N` note, `M` device, `C` full context, `A` arrows, `S` next captured stage, `U` pending. Shortcuts do not run while typing or using native select controls; Tab remains native.
 
 Decisions are cached locally when browser storage is available. **Export** downloads the agent-readable JSON record. Its red dot starts on each page load, clears after export, and returns when a decision or note changes. Switching views does not mark the record changed. The agent reads the exported record.
 

@@ -1,6 +1,14 @@
 'use strict';
 const BOARD = JSON.parse(document.getElementById('board-data').textContent);
 const $ = id => document.getElementById(id);
+function fitViewport() {
+  if (window.self === window.top) {
+    document.documentElement.style.setProperty('--dg-viewport', window.innerHeight + 'px');
+    document.body.classList.add('viewport-page');
+  }
+}
+fitViewport();
+window.addEventListener('resize', fitViewport);
 const CHOICES = ['accept', 'decline'];
 const FILTERS = ['pending', 'all', 'accept', 'decline', 'notes'];
 const key = 'design-grind:' + BOARD.id + ':v1';
@@ -139,7 +147,7 @@ function render() {
   $('prev').disabled = !navigationTarget(-1) || navigationTarget(-1) === selected;
   const next = navigationTarget(1), finish = selected && filter === 'pending' && !list.length;
   $('next').disabled = !finish && (!next || next === selected);
-  $('next').textContent = finish ? 'Finish' : 'Next';
+  $('next').innerHTML = (finish ? 'Finish' : 'Next') + ' <kbd>K</kbd>';
   if (!selected) return;
   const d = decision(selected);
   document.querySelectorAll('[data-choice]').forEach(button => {
@@ -153,10 +161,10 @@ function render() {
   if (!$('source').hidden) $('source').href = selected.sourceUrl;
   for (const name of ['desktop','mobile']) $(name).setAttribute('aria-pressed', String(device === name));
   $('context-toggle').setAttribute('aria-pressed', String(fullContext));
-  $('context-toggle').textContent = fullContext ? 'Detail' : 'Full context';
+  $('context-toggle').innerHTML = (fullContext ? 'Detail' : 'Full context') + ' <kbd>C</kbd>';
   $('context-toggle').disabled = selected.kind === 'evidence';
   $('stage-controls').hidden = !(selected.stages?.length > 1);
-  $('stage-controls').innerHTML = (selected.stages || []).map((stage,index) => '<button data-stage="' + index + '" aria-pressed="' + (index === stageIndex) + '">' + safe(stage.label) + '</button>').join('');
+  $('stage-controls').innerHTML = (selected.stages || []).map((stage,index) => '<button data-stage="' + index + '" aria-pressed="' + (index === stageIndex) + '">' + safe(stage.label) + (index === (stageIndex + 1) % selected.stages.length ? ' <kbd>S</kbd>' : '') + '</button>').join('');
   renderComparison();
   $('announcement').textContent = selected.group + ': ' + selected.title;
 }
@@ -226,7 +234,7 @@ document.addEventListener('keydown', event => {
       event.target.closest('input,textarea,select,[contenteditable=true]')) return;
   const key = event.key.toLowerCase();
   const action = {'1':() => decide('accept'),'2':() => decide('decline'),
-    j:() => move(1),k:() => move(-1),arrowright:() => move(1),arrowleft:() => move(-1),
+    j:() => move(-1),k:() => move(1),arrowright:() => move(1),arrowleft:() => move(-1),
     n:() => {if (selected) $('note').focus();},m:() => {device = device === 'desktop' ? 'mobile' : 'desktop'; render(); persist();},
     c:() => {fullContext = !fullContext; render();},a:() => {arrowsOn = !arrowsOn; render(); persist();},
     s:() => {if (selected?.stages?.length) {stageIndex = (stageIndex + 1) % selected.stages.length; render();}},
