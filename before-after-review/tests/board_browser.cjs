@@ -149,15 +149,15 @@ const {pathToFileURL} = require('node:url');
     assert.equal(await blocked.locator('button[data-choice=accept]').getAttribute('aria-pressed'),'true');
     assert.equal(await blocked.locator('#export').getAttribute('data-pending'),'true');
 
-    async function scenario(id, changes, storedDevice) {
-      const fixture = {...data,id,changes,initialFilter:'all',initialChange:changes[0].id};
+    async function scenario(id, changes, {storedDevice, decisions, cached} = {}) {
+      const fixture = {...data,id,changes,decisions,initialFilter:'all',initialChange:changes[0].id};
       const file = path.join(folder,id+'.html');
       await fs.writeFile(file,original.replace(dataMatch[0],'<script id="board-data" type="application/json">'+JSON.stringify(fixture).replaceAll('<','\\u003c')+'</script>'));
       const testPage = await context.newPage();
       testPage.on('pageerror',error=>errors.push(error.message));
-      if(storedDevice) await testPage.addInitScript(({id,device})=>{
-        localStorage.setItem('design-grind:'+id+':v1',JSON.stringify({device}));
-      },{id,device:storedDevice});
+      if(storedDevice || cached) await testPage.addInitScript(({id,stored})=>{
+        localStorage.setItem('design-grind:'+id+':v1',JSON.stringify(stored));
+      },{id,stored:{device:storedDevice,...cached}});
       await testPage.goto(pathToFileURL(file).href);
       return testPage;
     }
@@ -167,7 +167,7 @@ const {pathToFileURL} = require('node:url');
     assert.ok(capture,'Provide at least one screenshot pair in the test board');
     for(const device of ['mobile','desktop']) {
       const item = {...data.changes[0],variants:{[device]:capture},stages:[]};
-      const single = await scenario('only-'+device,[item],device==='mobile'?'desktop':'mobile');
+      const single = await scenario('only-'+device,[item],{storedDevice:device==='mobile'?'desktop':'mobile'});
       assert.equal(await single.locator('#comparison').getAttribute('data-device'),device);
       assert.equal(await single.locator('#device-controls').isVisible(),false);
       assert.equal(await single.locator('#desktop').isDisabled(),true);
@@ -214,8 +214,57 @@ const {pathToFileURL} = require('node:url');
     await navigation.locator('#next').click();assert.equal(await current(),'b2');
     await navigation.locator('#prev').click();assert.equal(await current(),'b1');
     await navigation.close();
+
+    const carried = {...data.changes[0],id:'carried',stages:[]};
+    const revised = {...data.changes[0],id:'revised',stages:[],fingerprint:'new-evidence'};
+    const seed = {
+      carried:{choice:'accept',note:'Keep this unchanged.',fingerprint:carried.fingerprint,updatedAt:'2026-01-01T00:00:00Z'},
+      revised:{choice:'decline',note:'Please revise the spacing.',fingerprint:'old-evidence',updatedAt:'2026-01-01T00:00:00Z'}
+    };
+    const seeded = await scenario('seeded-decisions',[carried,revised],{decisions:seed});
+    assert.equal(await seeded.locator('button[data-choice=accept]').getAttribute('aria-pressed'),'true');
+    assert.equal(await seeded.locator('#note').inputValue(),'Keep this unchanged.');
+    assert.equal(await seeded.locator('#progress').textContent(),'1 / 2 decided');
+    assert.equal(await seeded.locator('#export').getAttribute('data-pending'),'false');
+    await seeded.locator('[data-id=revised]').click();
+    assert.equal(await seeded.locator('#stale').isVisible(),true);
+    assert.equal(await seeded.locator('#note').inputValue(),'Please revise the spacing.');
+    assert.equal(await seeded.locator('button[data-choice=decline]').getAttribute('aria-pressed'),'false');
+    await seeded.keyboard.press('2');
+    assert.equal(await seeded.locator('#stale').isVisible(),false);
+    assert.equal(await seeded.locator('#progress').textContent(),'2 / 2 decided');
+    await seeded.reload();
+    assert.equal(await seeded.locator('button[data-choice=decline]').getAttribute('aria-pressed'),'true');
+    const seedDownload = seeded.waitForEvent('download');
+    await seeded.locator('#export').click();
+    const seedExport = JSON.parse(await fs.readFile(await (await seedDownload).path(),'utf8'));
+    assert.equal(seedExport.decisions.carried.choice,'accept');
+    assert.equal(seedExport.decisions.revised.choice,'decline');
+    assert.equal(seedExport.decisions.revised.fingerprint,'new-evidence');
+    await seeded.close();
+
+    const noStorage = await context.newPage();
+    noStorage.on('pageerror',error=>errors.push(error.message));
+    await noStorage.addInitScript(()=>{
+      Storage.prototype.getItem=()=>{throw new DOMException('Blocked','SecurityError');};
+      Storage.prototype.setItem=()=>{throw new DOMException('Blocked','SecurityError');};
+    });
+    await noStorage.goto(pathToFileURL(path.join(folder,'seeded-decisions.html')).href);
+    assert.equal(await noStorage.locator('button[data-choice=accept]').getAttribute('aria-pressed'),'true');
+    assert.equal(await noStorage.locator('#note').inputValue(),'Keep this unchanged.');
+    assert.equal(await noStorage.locator('#export').getAttribute('data-pending'),'false');
+    await noStorage.close();
+
+    for(const [name,time,expected] of [['older','2025-01-01T00:00:00Z','accept'],['newer','2026-02-01T00:00:00Z','decline']]) {
+      const cached = {decisions:{carried:{...seed.carried,choice:'decline',note:'Local edit',updatedAt:time}}};
+      const merge = await scenario('seed-with-'+name+'-cache',[carried],{decisions:{carried:seed.carried},cached});
+      assert.equal(await merge.locator('button[data-choice='+expected+']').getAttribute('aria-pressed'),'true');
+      assert.equal(await merge.locator('#note').inputValue(),name==='older'?'Keep this unchanged.':'Local edit');
+      assert.equal(await merge.locator('#export').getAttribute('data-pending'),String(name==='newer'));
+      await merge.close();
+    }
     assert.deepEqual(errors,[]);
-    console.log(JSON.stringify({result:'PASS',changes:data.changes.length,devices:availableDevices.length,checks:['keyboard and click toggles','independent notes','reload','changed evidence','export data','export change tracking and reverts','arrows','stages','completion','storage failure','layout','single-device boards','staged device detection','grouped item navigation and filters']}));
+    console.log(JSON.stringify({result:'PASS',changes:data.changes.length,devices:availableDevices.length,checks:['keyboard and click toggles','independent notes','reload','changed evidence','export data','export change tracking and reverts','arrows','stages','completion','storage failure','layout','single-device boards','staged device detection','grouped item navigation and filters','portable prior decisions','seed and cache precedence']}));
     await context.close();
   }finally{await browser.close();await fs.rm(folder,{recursive:true,force:true});}
 })().catch(error=>{console.error(error);process.exitCode=1;});

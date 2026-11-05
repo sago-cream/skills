@@ -8,6 +8,22 @@ python3 <skill-dir>/scripts/build_board.py manifest.json --output review.html
 
 The output is one offline HTML file with embedded, deduplicated screenshots. Identical inputs produce identical bytes. No server or external assets are required.
 
+For later rounds, embed the latest exported decisions in the rebuilt board:
+
+```sh
+python3 <skill-dir>/scripts/build_board.py manifest.json --decisions decisions.json --output review.html
+```
+
+Keep the source export unchanged. The builder checks its board ID and original `revision.base`; an earlier `revision.head` is expected when revising proposals. Choices and notes are embedded in the HTML, so they survive opening a new file, origin, browser, or embed without local storage. Newer local edits take precedence over embedded decisions by `updatedAt`; older cached choices do not replace a newer export. The embedded record is the starting export baseline, so carrying decisions forward does not by itself mark Export as changed.
+
+## Original baseline
+
+Pin the starting code snapshot, including pre-existing local edits, before changing the product. Keep original captures in a separate directory and reuse them without overwriting them. `revision.base` stays fixed for the whole review; in design-grind it is the start of the grind. `revision.head` advances as proposals change.
+
+Every Before description and capture, including staged comparisons and later-added changes, must describe that original state. Capture newly needed evidence from the pinned original snapshot. An intermediate proposal, the last reviewed head, or an accepted iteration must never become Before. If the original state cannot be captured, disclose that evidence gap instead of substituting a later screenshot. Iteration comparisons may be supplementary context, clearly labeled with their revisions.
+
+Keep the catalog cumulative and reuse the same board and change IDs across rounds. Preserve unchanged reviewed entries, including their screenshot files, crops, and descriptions; recapture and update only revised proposals. Previously accepted items stay accepted when their fingerprints match. Changed proposals retain the old choice and note as outdated evidence and need a fresh user choice. New items start pending. Do not automatically accept a revision just because its predecessor was accepted.
+
 ## Catalog
 
 ```json
@@ -41,7 +57,7 @@ The output is one offline HTML file with embedded, deduplicated screenshots. Ide
 - An image may include `arrows: [{x, y, labelX, labelY, label}]`, in original capture coordinates. Keep labels within the crop. Arrows overlay the original and can be hidden for inspection.
 - For captured stages of the same decision, supply `stages: [{id, label, variants}]`, such as Start/End scroll positions. Each stage uses the same variant schema. Switching stages preserves the decision and note; use separate changes for independent decisions.
 - Optional `sourceUrl` links to source code. `initialChange` selects an existing ID; `initialFilter` is `pending` (default), `all`, `accept`, `decline`, or `notes`.
-- The builder fingerprints each change's evidence and meaning. Changed comparisons reopen prior choices while preserving the old decision and note. Unchanged IDs and evidence keep their choices.
+- The builder fingerprints each change's evidence and meaning. Changed comparisons reopen prior choices while preserving the old decision and note. Unchanged IDs and evidence keep their choices when supplied with `--decisions` or available in the browser cache. Do not rely on the cache alone when delivering a rebuilt board.
 
 ## Review flow
 
