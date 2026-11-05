@@ -1,0 +1,3 @@
+interface:
+  display_name: "Before / After Review"
+  short_description: "Review UI changes with before/after decisions"
