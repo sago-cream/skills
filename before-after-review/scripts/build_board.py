@@ -14,6 +14,11 @@ def identifier(value):
         raise ValueError(f'Invalid stable ID: {value!r}')
 
 
+def fingerprint(value):
+    return hashlib.sha256(json.dumps(value, sort_keys=True, ensure_ascii=False,
+        separators=(',', ':'), allow_nan=False).encode()).hexdigest()
+
+
 def pack_variants(variants, change_id, base_dir, assets):
     import base64
     if not isinstance(variants, dict) or set(variants) - {'desktop', 'mobile'}:
@@ -50,8 +55,67 @@ def pack_variants(variants, change_id, base_dir, assets):
                     raise ValueError(f'{change_id}: arrow label must contain 1–60 characters')
 
 
-def build(manifest, output):
+def read_decisions(path, data):
+    record = json.loads(Path(path).read_text(encoding='utf-8'))
+    if (not isinstance(record, dict) or type(record.get('schemaVersion')) is not int or
+            record['schemaVersion'] != 1 or record.get('boardId') != data['id']):
+        raise ValueError('Decision record must match this board and schema version 1')
+    baseline = (data.get('revision') or {}).get('base')
+    if baseline is not None and (record.get('revision') or {}).get('base') != baseline:
+        raise ValueError('Decision record must use the same original revision.base')
+    decisions = record.get('decisions')
+    if not isinstance(decisions, dict):
+        raise ValueError('Decision record needs a decisions object')
+    result = {}
+    ids = {change['id'] for change in data['changes']}
+    for change_id, decision in decisions.items():
+        if not isinstance(decision, dict) or decision.get('choice') not in (None, 'accept', 'decline'):
+            raise ValueError(f'{change_id}: invalid decision choice')
+        for field in ('note', 'fingerprint', 'updatedAt'):
+            if not isinstance(decision.get(field, ''), str):
+                raise ValueError(f'{change_id}: decision {field} must be text')
+        if decision.get('choice') and not decision.get('fingerprint'):
+            raise ValueError(f'{change_id}: a choice needs its reviewed fingerprint')
+        if change_id in ids:
+            result[change_id] = {field: decision.get(field, None if field == 'choice' else '')
+                                 for field in ('choice', 'note', 'fingerprint', 'updatedAt')}
+    return result
+
+
+def check_baseline(data, path):
+    match = re.search(r'<script id="board-data" type="application/json">(.*?)</script>',
+                      Path(path).read_text(encoding='utf-8'), re.S)
+    if not match:
+        raise ValueError('Baseline must be an original board HTML file')
+    original = json.loads(match.group(1))
+    if (original['id'] != data['id'] or
+            (original.get('revision') or {}).get('base') != (data.get('revision') or {}).get('base')):
+        raise ValueError('Baseline must match this board and original revision.base')
+    originals = {change['id']: change for change in original['changes']}
+    for change in data['changes']:
+        before = originals.get(change['id'])
+        if before is None:
+            continue
+        if change['beforeText'] != before['beforeText']:
+            raise ValueError(f'{change["id"]}: keep the original Before description')
+        captures = {}
+        for stage in [before, *before.get('stages', [])]:
+            for device, pair in stage.get('variants', {}).items():
+                captures.setdefault(device, []).append(pair['before'])
+        for stage in [change, *change.get('stages', [])]:
+            for device, pair in stage.get('variants', {}).items():
+                known = captures.get(device, [])
+                if known and not any(all(pair['before'][key] == saved[key]
+                                         for key in ('asset', 'width', 'height')) for saved in known):
+                    raise ValueError(f'{change["id"]}/{device}: keep the original Before capture')
+
+
+def build(manifest, output, decisions=None, baseline=None):
     manifest, output = Path(manifest), Path(output)
+    if decisions is not None and baseline is None:
+        raise ValueError('Rebuilding with decisions requires --baseline original.html')
+    if baseline is not None and Path(baseline).resolve() == output.resolve():
+        raise ValueError('Keep the original baseline separate from the rebuilt output')
     data = json.loads(manifest.read_text(encoding='utf-8'))
     identifier(data.get('id'))
     if not isinstance(data.get('title'), str) or not data['title'].strip():
@@ -88,11 +152,16 @@ def build(manifest, output):
             raise ValueError(f'{change["id"]}: provide captures or use kind evidence')
         pack_variants(variants, change['id'], manifest.parent, assets)
         content = {k: v for k, v in change.items() if k not in ('decision', 'fingerprint')}
-        change['fingerprint'] = hashlib.sha256(json.dumps(content, sort_keys=True,
-            ensure_ascii=False, separators=(',', ':'), allow_nan=False).encode()).hexdigest()
+        change['fingerprint'] = fingerprint(content)
     if data.get('initialChange') and data['initialChange'] not in ids:
         raise ValueError('initialChange must identify a change')
+    if baseline is not None:
+        check_baseline(data, baseline)
+    if decisions is not None:
+        data['decisions'] = read_decisions(decisions, data)
     data['assets'] = assets
+    data.pop('version', None)
+    data['version'] = fingerprint(data)
     root = Path(__file__).resolve().parent.parent
     template = (root / 'assets' / 'board.html').read_text(encoding='utf-8')
     data_json = json.dumps(data, sort_keys=True, ensure_ascii=False,
@@ -110,5 +179,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('manifest', type=Path)
     parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--decisions', type=Path, help='Previous exported decision JSON for this board and original baseline')
+    parser.add_argument('--baseline', type=Path, help='Original board HTML; required with --decisions')
     args = parser.parse_args()
-    print(json.dumps(build(args.manifest, args.output)))
+    print(json.dumps(build(args.manifest, args.output, args.decisions, args.baseline)))
