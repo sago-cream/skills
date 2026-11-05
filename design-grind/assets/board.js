@@ -42,6 +42,13 @@ let selected = byId.get(location.hash.slice(1)) || byId.get(stored.selected) || 
 let device = stored.device === 'mobile' ? 'mobile' : 'desktop';
 let fullContext = false, holdingBefore = false, stageIndex = 0, arrowsOn = stored.arrowsOn !== false;
 function decision(item) { return decisions[item.id] || {choice:null,note:'',fingerprint:'',updatedAt:''}; }
+function decisionSnapshot() {
+  return JSON.stringify(items.flatMap(item => {
+    const d = decision(item);
+    return d.choice || d.note ? [[item.id, d.choice, d.note, d.choice ? d.fingerprint : null]] : [];
+  }));
+}
+let exportBaseline = typeof stored.exportBaseline === 'string' ? stored.exportBaseline : decisionSnapshot();
 function stale(item) { const d = decision(item); return Boolean(d.choice && d.fingerprint !== item.fingerprint); }
 function matches(item) {
   const d = decision(item);
@@ -62,13 +69,14 @@ function record() {
 }
 function setExportPending(pending) {
   $('export').dataset.pending = String(pending);
-  const label = pending ? 'Export decisions; not exported this session or changed since export' : 'Export decisions';
+  const label = pending ? 'Export decisions; changes not exported' : 'Export decisions';
   $('export').setAttribute('aria-label', label);
   $('export').title = pending ? 'Changes not exported' : 'Export decisions';
 }
 function persist() {
+  setExportPending(decisionSnapshot() !== exportBaseline);
   try {
-    localStorage.setItem(key, JSON.stringify({decisions, filter, selected:selected?.id, device, arrowsOn}));
+    localStorage.setItem(key, JSON.stringify({decisions, exportBaseline, filter, selected:selected?.id, device, arrowsOn}));
   } catch {}
 }
 function renderNav() {
@@ -187,7 +195,6 @@ function move(direction) {
 }
 function decide(choice) {
   if (!selected) return;
-  setExportPending(true);
   decisions[selected.id] = {...decision(selected), choice, fingerprint:selected.fingerprint, updatedAt:new Date().toISOString()};
   render();
   $('announcement').textContent = choice === 'accept' ? 'Accepted' : 'Declined';
@@ -211,7 +218,6 @@ $('next').onclick = () => move(1);
 $('show-all').onclick = () => setFilter('all');
 $('note').oninput = () => {
   if (!selected) return;
-  setExportPending(true);
   decisions[selected.id] = {...decision(selected), note:$('note').value.slice(0,12000), updatedAt:new Date().toISOString()};
   // A note never reconfirms an outdated accept/decline choice.
   renderNav();
@@ -253,11 +259,11 @@ $('export').onclick = () => {
   const url = URL.createObjectURL(new Blob([JSON.stringify(record(),null,2)+'\n'],{type:'application/json'}));
   const link = document.createElement('a');
   link.href = url; link.download = BOARD.id + '-decisions.json'; link.click();
-  setExportPending(false);
+  exportBaseline = decisionSnapshot();
+  persist();
   $('announcement').textContent = 'Decision record download started';
   setTimeout(() => URL.revokeObjectURL(url),1000);
 };
 if (filter !== 'all' && !matches(selected)) selected = visible()[0] || null;
-setExportPending(true);
 render();
 persist();

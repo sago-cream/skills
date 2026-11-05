@@ -49,6 +49,6 @@ The grouped list locates changes; the purpose line explains the benefit; detail/
 
 Keys: `1` accept, `2` decline, `J/K` previous/next, hold `Space` to show before, `N` note, `M` device, `C` full context, `A` arrows, `S` next captured stage, `U` pending. Shortcuts do not run while typing or using native select controls; Tab remains native.
 
-Decisions are cached locally when browser storage is available. **Export** downloads the agent-readable JSON record. Its red dot starts on each page load, clears after export, and returns when a decision or note changes. Switching views does not mark the record changed. The agent reads the exported record.
+Decisions are cached locally when browser storage is available. **Export** downloads the agent-readable JSON record. Its red dot indicates decisions or notes that differ from the starting or last-exported record. Reverting edits clears it; timestamps and empty note-only entries do not count as changes. The comparison survives reloads when browser storage is available. Switching views does not mark the record changed. The agent reads the exported record.
 
 Decision JSON contains `schemaVersion: 1`, `boardId`, `revision`, and `decisions` keyed by change ID. Each decision has `choice` (`accept`, `decline`, or null), `note`, `fingerprint`, and `updatedAt`. A note is not a third decision state. Use the record to apply selections, revise proposals from notes, and rebuild with the same IDs; verify the selected combination. Do not overwrite the user's source record when making a demonstration board.
