@@ -81,10 +81,13 @@ const {pathToFileURL} = require('node:url');
     await page.keyboard.up('Space');
     assert.equal(await page.locator('.capture[data-side=after] figcaption strong').textContent(),'After');
     // Changed evidence reopens a decision without losing its independent note.
+    data.decisions = await page.evaluate(({id,version})=>
+      JSON.parse(localStorage.getItem('before-after-review:'+id+':'+version)).decisions,data);
+    data.version += '-revised';
     data.changes.find(change=>change.id===first).fingerprint='updated-evidence';
     await fs.writeFile(target,original.replace(dataMatch[0],'<script id="board-data" type="application/json">'+JSON.stringify(data).replaceAll('<','\\u003c')+'</script>'));
     await page.reload();
-    assert.equal(await pending(),'true');
+    assert.equal(await pending(),'false');
     assert.equal(await page.locator('#stale').isVisible(),true);
     await page.locator('#note').fill('Note does not reconfirm changed evidence');
     assert.equal(await page.locator('#stale').isVisible(),true);
@@ -135,8 +138,8 @@ const {pathToFileURL} = require('node:url');
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
     await page.screenshot({path:path.join(path.dirname(process.argv[2]),'board-mobile.png'),fullPage:true});
     // Completion uses a record prepared by the agent, without import controls.
-    await page.evaluate(({id,changes})=>{
-      localStorage.setItem('design-grind:'+id+':v1',JSON.stringify({filter:'pending',decisions:Object.fromEntries(changes.slice(0,-1).map(item=>[item.id,{choice:'accept',note:'',fingerprint:item.fingerprint}]))}));
+    await page.evaluate(({id,version,changes})=>{
+      localStorage.setItem('before-after-review:'+id+':'+version,JSON.stringify({filter:'pending',decisions:Object.fromEntries(changes.slice(0,-1).map(item=>[item.id,{choice:'accept',note:'',fingerprint:item.fingerprint}]))}));
     },data);
     await page.reload();await page.locator('[data-choice=accept]').click();
     assert.match(await page.locator('#next').textContent(),/^Finish/);await page.locator('#next').click();
@@ -149,15 +152,15 @@ const {pathToFileURL} = require('node:url');
     assert.equal(await blocked.locator('button[data-choice=accept]').getAttribute('aria-pressed'),'true');
     assert.equal(await blocked.locator('#export').getAttribute('data-pending'),'true');
 
-    async function scenario(id, changes, {storedDevice, decisions, cached} = {}) {
-      const fixture = {...data,id,changes,decisions,initialFilter:'all',initialChange:changes[0].id};
+    async function scenario(id, changes, {storedDevice, decisions, version = id} = {}) {
+      const fixture = {...data,id,version,changes,decisions,initialFilter:'all',initialChange:changes[0].id};
       const file = path.join(folder,id+'.html');
       await fs.writeFile(file,original.replace(dataMatch[0],'<script id="board-data" type="application/json">'+JSON.stringify(fixture).replaceAll('<','\\u003c')+'</script>'));
       const testPage = await context.newPage();
       testPage.on('pageerror',error=>errors.push(error.message));
-      if(storedDevice || cached) await testPage.addInitScript(({id,stored})=>{
-        localStorage.setItem('design-grind:'+id+':v1',JSON.stringify(stored));
-      },{id,stored:{device:storedDevice,...cached}});
+      if(storedDevice) await testPage.addInitScript(({id,version,device})=>{
+        localStorage.setItem('before-after-review:'+id+':'+version,JSON.stringify({device}));
+      },{id,version,device:storedDevice});
       await testPage.goto(pathToFileURL(file).href);
       return testPage;
     }
@@ -255,16 +258,25 @@ const {pathToFileURL} = require('node:url');
     assert.equal(await noStorage.locator('#export').getAttribute('data-pending'),'false');
     await noStorage.close();
 
-    for(const [name,time,expected] of [['older','2025-01-01T00:00:00Z','accept'],['newer','2026-02-01T00:00:00Z','decline']]) {
-      const cached = {decisions:{carried:{...seed.carried,choice:'decline',note:'Local edit',updatedAt:time}}};
-      const merge = await scenario('seed-with-'+name+'-cache',[carried],{decisions:{carried:seed.carried},cached});
-      assert.equal(await merge.locator('button[data-choice='+expected+']').getAttribute('aria-pressed'),'true');
-      assert.equal(await merge.locator('#note').inputValue(),name==='older'?'Keep this unchanged.':'Local edit');
-      assert.equal(await merge.locator('#export').getAttribute('data-pending'),String(name==='newer'));
-      await merge.close();
-    }
+    const oldBoard = await scenario('cache-isolation',[{...carried,fingerprint:'old-evidence'}],{version:'old'});
+    const newBoard = await scenario('cache-isolation',[carried],{version:'new',decisions:{carried:seed.carried}});
+    await oldBoard.locator('#note').fill('Late edit in the previous board');
+    await oldBoard.keyboard.press('Escape');
+    await oldBoard.keyboard.press('2');
+    await newBoard.reload();
+    assert.equal(await newBoard.locator('button[data-choice=accept]').getAttribute('aria-pressed'),'true');
+    assert.equal(await newBoard.locator('#note').inputValue(),'Keep this unchanged.');
+    assert.equal(await newBoard.locator('#export').getAttribute('data-pending'),'false');
+    await newBoard.locator('#note').fill('An edit to this exact version');
+    await newBoard.keyboard.press('Escape');
+    await newBoard.keyboard.press('1');
+    await newBoard.reload();
+    assert.equal(await newBoard.locator('button[data-choice=accept]').getAttribute('aria-pressed'),'false');
+    assert.equal(await newBoard.locator('#note').inputValue(),'An edit to this exact version');
+    assert.equal(await newBoard.locator('#export').getAttribute('data-pending'),'true');
+    await oldBoard.close();await newBoard.close();
     assert.deepEqual(errors,[]);
-    console.log(JSON.stringify({result:'PASS',changes:data.changes.length,devices:availableDevices.length,checks:['keyboard and click toggles','independent notes','reload','changed evidence','export data','export change tracking and reverts','arrows','stages','completion','storage failure','layout','single-device boards','staged device detection','grouped item navigation and filters','portable prior decisions','seed and cache precedence']}));
+    console.log(JSON.stringify({result:'PASS',changes:data.changes.length,devices:availableDevices.length,checks:['keyboard and click toggles','independent notes','reload','changed evidence','export data','export change tracking and reverts','arrows','stages','completion','storage failure','layout','single-device boards','staged device detection','grouped item navigation and filters','portable prior decisions','cache version isolation']}));
     await context.close();
   }finally{await browser.close();await fs.rm(folder,{recursive:true,force:true});}
 })().catch(error=>{console.error(error);process.exitCode=1;});

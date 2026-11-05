@@ -11,7 +11,7 @@ fitViewport();
 window.addEventListener('resize', fitViewport);
 const CHOICES = ['accept', 'decline'];
 const FILTERS = ['pending', 'all', 'accept', 'decline', 'notes'];
-const key = 'design-grind:' + BOARD.id + ':v1';
+const key = 'before-after-review:' + BOARD.id + ':' + BOARD.version;
 const items = BOARD.changes;
 const itemGroups = new Map();
 for (const item of items) {
@@ -42,30 +42,21 @@ function cleanDecisions(raw) {
   }
   return result;
 }
-const seededDecisions = cleanDecisions(BOARD.decisions || {});
-const seedSnapshot = JSON.stringify(seededDecisions);
-let cachedDecisions;
-try { cachedDecisions = cleanDecisions(stored.decisions || {}); }
-catch { cachedDecisions = Object.create(null); }
-const decisions = {...seededDecisions};
-for (const [id, cached] of Object.entries(cachedDecisions)) {
-  const seed = seededDecisions[id];
-  if (!seed || (Date.parse(cached.updatedAt) || 0) > (Date.parse(seed.updatedAt) || 0)) decisions[id] = cached;
-}
+let decisions;
+try { decisions = cleanDecisions(stored.decisions || BOARD.decisions || {}); }
+catch { decisions = cleanDecisions(BOARD.decisions || {}); }
 let filter = FILTERS.includes(stored.filter) ? stored.filter : (BOARD.initialFilter || 'pending');
 let selected = byId.get(location.hash.slice(1)) || byId.get(stored.selected) || byId.get(BOARD.initialChange) || items[0];
 let device = devices.includes(stored.device) ? stored.device : (devices[0] || 'desktop');
 let fullContext = false, holdingBefore = false, stageIndex = 0, arrowsOn = stored.arrowsOn !== false;
 function decision(item) { return decisions[item.id] || {choice:null,note:'',fingerprint:'',updatedAt:''}; }
-function decisionSnapshot(source = decisions) {
+function decisionSnapshot() {
   return JSON.stringify(items.flatMap(item => {
-    const d = source[item.id] || {choice:null,note:''};
+    const d = decision(item);
     return d.choice || d.note ? [[item.id, d.choice, d.note, d.choice ? d.fingerprint : null]] : [];
   }));
 }
-const newSeed = BOARD.decisions !== undefined && stored.seedSnapshot !== seedSnapshot;
-let exportBaseline = newSeed ? decisionSnapshot(seededDecisions) :
-  (typeof stored.exportBaseline === 'string' ? stored.exportBaseline : decisionSnapshot());
+let exportBaseline = typeof stored.exportBaseline === 'string' ? stored.exportBaseline : decisionSnapshot();
 function stale(item) { const d = decision(item); return Boolean(d.choice && d.fingerprint !== item.fingerprint); }
 function matches(item) {
   const d = decision(item);
@@ -93,7 +84,7 @@ function setExportPending(pending) {
 function persist() {
   setExportPending(decisionSnapshot() !== exportBaseline);
   try {
-    localStorage.setItem(key, JSON.stringify({decisions, exportBaseline, seedSnapshot, filter, selected:selected?.id, device, arrowsOn}));
+    localStorage.setItem(key, JSON.stringify({decisions, exportBaseline, filter, selected:selected?.id, device, arrowsOn}));
   } catch {}
 }
 function renderNav() {
