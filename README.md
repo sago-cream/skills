@@ -12,6 +12,7 @@ npx skills add sago-cream/skills -g
 
 ### Easier Communication with Agents
 
+- [$minisago-discord](https://github.com/sago-cream/skills/tree/main/minisago-discord): Checks Discord through MiniSago on Oracle over SSH, with message links and posting when requested.
 - [$html-drop](https://github.com/sago-cream/skills/tree/main/html-drop): Creates a HTML artifact for complicated concepts, pair with `$forward-port` to view on mobile easily.
 - [$forward-port](https://github.com/sago-cream/skills/tree/main/forward-port): Forward port through a Cloudflare Quick Tunnel, so we can work on frontend stuff when pooping.
 
