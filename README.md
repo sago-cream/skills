@@ -22,7 +22,7 @@ npx skills add sago-cream/skills -g
 ### Better Design
 
 - [$design-grind](https://github.com/sago-cream/skills/tree/main/design-grind): Improves every meaningful UI state through independent scored reviews and a before/after decision board.
-- [$before-after-review](https://github.com/sago-cream/skills/tree/main/before-after-review): Reviews UI changes in a standalone before/after decision board with Accept / Decline and independent notes; also used by `$design-grind`.
+- [$before-after-review](https://github.com/sago-cream/skills/tree/main/before-after-review): Builds a reusable before/after decision board and returns Accept / Decline choices and independent notes to the calling workflow.
 - [$userflow-review](https://github.com/sago-cream/skills/tree/main/userflow-review): Packs screen catalogs, HTML, and screenshots into a minimal user-flow review board with settlement and desktop/mobile previews.
 - [$design](https://github.com/sago-cream/skills/tree/main/design): Builds and polishes interfaces, CSS, and motion without fighting the project’s design system.
 - [$font-cut](https://github.com/sago-cream/skills/tree/main/font-cut): Proposes a cleaner type system so Sol doesn't add 20 variants to your product :)

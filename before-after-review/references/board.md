@@ -14,7 +14,7 @@ Rebuild after review:
 python3 <skill-dir>/scripts/build_board.py manifest.json --baseline original.html --decisions decisions.json --output review.html
 ```
 
-`--baseline` checks the board ID, fixed `revision.base`, and known Before descriptions and captures against the first board, including stages. Crops and annotations may change while retaining the original image. New changes or previously uncaptured states need genuine captures from the starting revision. Only `revision.head` advances between rounds.
+`--baseline` checks the board ID, any supplied `revision.base`, and known Before descriptions and captures against the first board, including stages. Crops and annotations may change while retaining the original image. New changes or previously uncaptured states need genuine evidence from the original baseline.
 
 `--decisions` embeds the exported choices and notes. Unchanged fingerprints keep their choices; revised evidence requires a fresh decision. Local storage resumes edits only for the exact board version; rebuilding with different evidence or exported decisions starts from the supplied record.
 
@@ -51,6 +51,7 @@ python3 <skill-dir>/scripts/build_board.py manifest.json --baseline original.htm
 - An image may include `arrows: [{x, y, labelX, labelY, label}]`, in original capture coordinates. Keep labels within the crop. Arrows overlay the original and can be hidden for inspection.
 - For captured stages of the same decision, supply `stages: [{id, label, variants}]`, such as Start/End scroll positions. Each stage uses the same variant schema. Switching stages preserves the decision and note; use separate changes for independent decisions.
 - Optional `sourceUrl` links to source code. `initialChange` selects an existing ID; `initialFilter` is `pending` (default), `all`, `accept`, `decline`, or `notes`.
+- `revision` is optional for reviews based on supplied captures. When included, keep `base` fixed and advance `head` as the caller supplies revised proposals.
 - The builder fingerprints each change's evidence and meaning. Changed comparisons reopen prior choices while preserving the old decision and note. Use `--decisions` to carry choices into a rebuilt board.
 
 ## Review flow
@@ -61,4 +62,4 @@ Keys: `1` toggle accept, `2` toggle decline, `J/K` or left/right arrows previous
 
 Decisions are cached locally when browser storage is available. **Export** downloads the agent-readable JSON record. Its red dot indicates decisions or notes that differ from the starting or last-exported record. Reverting edits clears it; timestamps and empty note-only entries do not count as changes. The comparison survives reloads when browser storage is available. Switching views does not mark the record changed. The agent reads the exported record.
 
-Decision JSON contains `schemaVersion: 1`, `boardId`, `revision`, and `decisions` keyed by change ID. Each decision has `choice` (`accept`, `decline`, or null), `note`, `fingerprint`, and `updatedAt`. A note is not a third decision state.
+Decision JSON contains `schemaVersion: 1`, `boardId`, `revision`, and `decisions` keyed by change ID. Each decision has `choice` (`accept`, `decline`, or null), `note`, `fingerprint`, and `updatedAt`. A note is not a third decision state. Return this record and identify choices whose fingerprints no longer match; the calling workflow applies selections and verifies its implementation.
