@@ -32,12 +32,7 @@ catch { decisions = Object.create(null); }
 let filter = FILTERS.includes(stored.filter) ? stored.filter : (BOARD.initialFilter || 'pending');
 let selected = byId.get(location.hash.slice(1)) || byId.get(stored.selected) || byId.get(BOARD.initialChange) || items[0];
 let device = stored.device === 'mobile' ? 'mobile' : 'desktop';
-let side = ['before','after','both'].includes(stored.side) ? stored.side : (matchMedia('(max-width:480px)').matches ? 'after' : 'both');
 let fullContext = false, holdingBefore = false, stageIndex = 0, arrowsOn = stored.arrowsOn !== false;
-const undo = [];
-let browserSaved = false, fileHandle = null, rememberedHandle = null, fileError = '', saveGeneration = 0;
-let writes = Promise.resolve();
-let noteTimer;
 function decision(item) { return decisions[item.id] || {choice:null,note:'',fingerprint:'',updatedAt:''}; }
 function stale(item) { const d = decision(item); return Boolean(d.choice && d.fingerprint !== item.fingerprint); }
 function matches(item) {
@@ -57,42 +52,16 @@ function record() {
   return {schemaVersion:1, boardId:BOARD.id, revision:BOARD.revision || null,
     decisions:Object.fromEntries(items.filter(item => decisions[item.id]).map(item => [item.id, decisions[item.id]]))};
 }
-function setMessage(text) { $('message').textContent = text; }
-function setRecordMessage(text) { $('record-message').textContent = text; }
-function saveStatus(text, error = false) {
-  $('save-status').textContent = text;
-  $('save-status').dataset.error = String(error);
+function setExportPending(pending) {
+  $('export').dataset.pending = String(pending);
+  const label = pending ? 'Export decisions; not exported this session or changed since export' : 'Export decisions';
+  $('export').setAttribute('aria-label', label);
+  $('export').title = pending ? 'Changes not exported' : 'Export decisions';
 }
-function persist(writeFile = true) {
+function persist() {
   try {
-    localStorage.setItem(key, JSON.stringify({decisions, filter, selected:selected?.id,
-      device, side, arrowsOn}));
-    browserSaved = true;
-  } catch { browserSaved = false; }
-  if (!fileHandle || !writeFile) {
-    if (fileError) saveStatus(fileError + (browserSaved ? ' · browser saved' : ' · export now'), true);
-    else if (!fileHandle) saveStatus(browserSaved ? 'Saved in this browser' : 'Session only · export to save', !browserSaved);
-    return;
-  }
-  const generation = ++saveGeneration;
-  const payload = JSON.stringify(record(), null, 2) + '\n';
-  const handle = fileHandle;
-  saveStatus('Saving file…');
-  writes = writes.catch(() => {}).then(async () => {
-    try {
-      const writer = await handle.createWritable();
-      try { await writer.write(payload); await writer.close(); }
-      catch (error) { await writer.abort?.().catch(() => {}); throw error; }
-      if (generation === saveGeneration) {
-        fileError = '';
-        saveStatus('Saved to ' + handle.name);
-      }
-    } catch {
-      fileError = 'File save failed';
-      fileHandle = null;
-      if (generation === saveGeneration) saveStatus(fileError + (browserSaved ? ' · browser saved' : ' · export now'), true);
-    }
-  });
+    localStorage.setItem(key, JSON.stringify({decisions, filter, selected:selected?.id, device, arrowsOn}));
+  } catch {}
 }
 function renderNav() {
   const groups = new Map();
@@ -119,7 +88,6 @@ function renderNav() {
 }
 function renderComparison() {
   const container = $('comparison');
-  container.dataset.side = side;
   container.dataset.device = device;
   if (!selected) return;
   const pair = selected.stages?.length ? selected.stages[stageIndex]?.variants?.[device] : selected.variants?.[device];
@@ -168,11 +136,10 @@ function render() {
   $('position').textContent = selected ? (index >= 0 ? (index + 1) + ' / ' + list.length : 'Decision saved') : '';
   $('empty-title').textContent = filter === 'pending' ? 'No decisions left' : 'Nothing in this filter';
   $('empty-copy').textContent = filter === 'pending' ? 'You can revisit any choice or export the record.' : 'Your decisions and notes are preserved.';
-  $('undo').disabled = !undo.length;
   $('prev').disabled = !navigationTarget(-1) || navigationTarget(-1) === selected;
   const next = navigationTarget(1), finish = selected && filter === 'pending' && !list.length;
   $('next').disabled = !finish && (!next || next === selected);
-  $('next').innerHTML = (finish ? 'Finish' : 'Next') + ' <kbd>J</kbd>';
+  $('next').textContent = finish ? 'Finish' : 'Next';
   if (!selected) return;
   const d = decision(selected);
   document.querySelectorAll('[data-choice]').forEach(button => {
@@ -185,9 +152,8 @@ function render() {
   $('source').hidden = !/^https:\/\//.test(selected.sourceUrl || '');
   if (!$('source').hidden) $('source').href = selected.sourceUrl;
   for (const name of ['desktop','mobile']) $(name).setAttribute('aria-pressed', String(device === name));
-  for (const name of ['before','after','both']) $('side-' + name).setAttribute('aria-pressed', String(side === name));
   $('context-toggle').setAttribute('aria-pressed', String(fullContext));
-  $('context-toggle').innerHTML = (fullContext ? 'Detail' : 'Full context') + ' <kbd>C</kbd>';
+  $('context-toggle').textContent = fullContext ? 'Detail' : 'Full context';
   $('context-toggle').disabled = selected.kind === 'evidence';
   $('stage-controls').hidden = !(selected.stages?.length > 1);
   $('stage-controls').innerHTML = (selected.stages || []).map((stage,index) => '<button data-stage="' + index + '" aria-pressed="' + (index === stageIndex) + '">' + safe(stage.label) + '</button>').join('');
@@ -195,7 +161,6 @@ function render() {
   $('announcement').textContent = selected.group + ': ' + selected.title;
 }
 function choose(id) {
-  setMessage('');
   selected = byId.get(id) || null;
   stageIndex = 0;
   holdingBefore = false;
@@ -204,7 +169,7 @@ function choose(id) {
     try { history.replaceState(null, '', '#' + selected.id); } catch {}
   }
   render();
-  persist(false);
+  persist();
 }
 function move(direction) {
   const list = visible();
@@ -214,25 +179,11 @@ function move(direction) {
 }
 function decide(choice) {
   if (!selected) return;
-  setRecordMessage('');
-  clearTimeout(noteTimer);
-  undo.push({id:selected.id, previous:decisions[selected.id] ? {...decisions[selected.id]} : null});
+  setExportPending(true);
   decisions[selected.id] = {...decision(selected), choice, fingerprint:selected.fingerprint, updatedAt:new Date().toISOString()};
-  setMessage(choice === 'accept' ? 'Accepted' : 'Declined');
   render();
+  $('announcement').textContent = choice === 'accept' ? 'Accepted' : 'Declined';
   persist();
-}
-function undoDecision() {
-  const change = undo.pop();
-  if (!change) return;
-  setRecordMessage('');
-  const latestNote = decisions[change.id]?.note || '';
-  if (change.previous) decisions[change.id] = {...change.previous, note:latestNote};
-  else if (latestNote) decisions[change.id] = {choice:null,note:latestNote,fingerprint:'',updatedAt:new Date().toISOString()};
-  else delete decisions[change.id];
-  choose(change.id);
-  persist();
-  setMessage('Decision undone; note kept');
 }
 function setFilter(value) {
   filter = value;
@@ -249,46 +200,37 @@ $('change-list').onclick = event => {
 document.querySelectorAll('button[data-choice]').forEach(button => { button.onclick = () => decide(button.dataset.choice); });
 $('prev').onclick = () => move(-1);
 $('next').onclick = () => move(1);
-$('undo').onclick = undoDecision;
 $('show-all').onclick = () => setFilter('all');
 $('note').oninput = () => {
   if (!selected) return;
-  setRecordMessage('');
+  setExportPending(true);
   decisions[selected.id] = {...decision(selected), note:$('note').value.slice(0,12000), updatedAt:new Date().toISOString()};
   // A note never reconfirms an outdated accept/decline choice.
   renderNav();
-  persist(false);
-  clearTimeout(noteTimer);
-  if (fileHandle) {
-    saveStatus('Saving file…');
-    noteTimer = setTimeout(() => persist(),250);
-  }
+  persist();
 };
 $('menu').onclick = () => {
   const open = document.body.classList.toggle('sidebar-open');
   $('menu').setAttribute('aria-expanded',String(open));
 };
-for (const name of ['desktop','mobile']) $(name).onclick = () => { device = name; render(); persist(false); };
-for (const name of ['before','after','both']) $('side-' + name).onclick = () => { side = name; render(); persist(false); };
+for (const name of ['desktop','mobile']) $(name).onclick = () => { device = name; render(); persist(); };
 $('context-toggle').onclick = () => { fullContext = !fullContext; render(); };
-$('arrows').onclick = () => { arrowsOn = !arrowsOn; render(); persist(false); };
+$('arrows').onclick = () => { arrowsOn = !arrowsOn; render(); persist(); };
 $('stage-controls').onclick = event => { const button = event.target.closest('[data-stage]'); if (button) {stageIndex = Number(button.dataset.stage); render();} };
-$('help').onclick = () => $('shortcuts').showModal();
-$('close-help').onclick = () => $('shortcuts').close();
 document.addEventListener('keydown', event => {
   if (event.key === 'Escape') {
     if (event.target === $('note')) { event.target.blur(); $('comparison').focus(); }
     return;
   }
   if (event.ctrlKey || event.metaKey || event.altKey || event.repeat || event.isComposing ||
-      event.target.closest('input,textarea,select,[contenteditable=true]') || $('shortcuts').open) return;
+      event.target.closest('input,textarea,select,[contenteditable=true]')) return;
   const key = event.key.toLowerCase();
   const action = {'1':() => decide('accept'),'2':() => decide('decline'),
     j:() => move(1),k:() => move(-1),arrowright:() => move(1),arrowleft:() => move(-1),
-    n:() => $('note').focus(),z:undoDecision,m:() => {device = device === 'desktop' ? 'mobile' : 'desktop'; render(); persist(false);},
-    c:() => {fullContext = !fullContext; render();},a:() => {arrowsOn = !arrowsOn; render(); persist(false);},
+    n:() => {if (selected) $('note').focus();},m:() => {device = device === 'desktop' ? 'mobile' : 'desktop'; render(); persist();},
+    c:() => {fullContext = !fullContext; render();},a:() => {arrowsOn = !arrowsOn; render(); persist();},
     s:() => {if (selected?.stages?.length) {stageIndex = (stageIndex + 1) % selected.stages.length; render();}},
-    u:() => setFilter('pending'),'?':() => $('shortcuts').showModal()}[key];
+    u:() => setFilter('pending')}[key];
   if (action) { event.preventDefault(); action(); }
   else if (event.code === 'Space' && !event.target.closest('button,a,summary')) {
     event.preventDefault(); holdingBefore = true; renderComparison();
@@ -303,82 +245,11 @@ $('export').onclick = () => {
   const url = URL.createObjectURL(new Blob([JSON.stringify(record(),null,2)+'\n'],{type:'application/json'}));
   const link = document.createElement('a');
   link.href = url; link.download = BOARD.id + '-decisions.json'; link.click();
-  setRecordMessage('Decision record download started');
+  setExportPending(false);
+  $('announcement').textContent = 'Decision record download started';
   setTimeout(() => URL.revokeObjectURL(url),1000);
 };
-$('import').onclick = () => $('import-file').click();
-$('import-file').onchange = async event => {
-  const file = event.target.files[0];
-  if (!file) return;
-  try {
-    const data = JSON.parse(await file.text());
-    if (data.schemaVersion !== 1 || data.boardId !== BOARD.id) throw new Error('This record belongs to another board or format');
-    const incoming = cleanDecisions(data.decisions);
-    decisions = Object.assign(Object.create(null), decisions, incoming);
-    render(); persist(); setRecordMessage('Decision record imported');
-  } catch (error) { setRecordMessage('Import failed: ' + error.message); }
-  event.target.value = '';
-};
-function handleStore(mode, value) {
-  return new Promise((resolve,reject) => {
-    const request = indexedDB.open('design-grind-files',1);
-    request.onupgradeneeded = () => request.result.createObjectStore('handles');
-    request.onerror = () => reject(request.error);
-    request.onsuccess = () => {
-      const db = request.result;
-      try {
-        const tx = db.transaction('handles',mode);
-        const result = mode === 'readwrite' ? tx.objectStore('handles').put(value,BOARD.id) : tx.objectStore('handles').get(BOARD.id);
-        result.onsuccess = () => { if (mode === 'readonly') resolve(result.result); };
-        tx.oncomplete = () => {db.close(); if (mode === 'readwrite') resolve();};
-        tx.onerror = () => {db.close(); reject(tx.error);};
-      } catch (error) {db.close(); reject(error);}
-    };
-  });
-}
-async function attachFile(handle, writeNow) {
-  const text = await (await handle.getFile()).text();
-  if (text.trim()) {
-    const data = JSON.parse(text);
-    if (data.schemaVersion !== 1 || data.boardId !== BOARD.id) throw new Error('This file belongs to another board or format');
-    const incoming = cleanDecisions(data.decisions);
-    for (const [id, value] of Object.entries(incoming)) {
-      const local = decisions[id];
-      if (!local || (Date.parse(value.updatedAt) || 0) > (Date.parse(local.updatedAt) || 0)) decisions[id] = value;
-    }
-  }
-  fileHandle = handle; rememberedHandle = handle; fileError = '';
-  setRecordMessage('');
-  render();
-  persist(writeNow);
-  if (!writeNow) saveStatus('File connected · ' + handle.name);
-}
-$('connect').onclick = async () => {
-  try {
-    let handle = rememberedHandle;
-    if (handle) {
-      const permission = await handle.requestPermission({mode:'readwrite'});
-      if (permission !== 'granted') handle = null;
-    }
-    if (!handle) {
-      if (!window.showSaveFilePicker) { setRecordMessage('File autosave needs Chrome or Edge. Export a JSON record here.'); return; }
-      handle = await showSaveFilePicker({startIn:'downloads',suggestedName:BOARD.id+'-decisions.json',types:[{description:'Decision record',accept:{'application/json':['.json']}}]});
-    }
-    await attachFile(handle,true);
-    handleStore('readwrite',handle).catch(() => {});
-  } catch (error) { if (error.name !== 'AbortError') setRecordMessage('File not connected: ' + error.message + '. Use Export decisions to save separately.'); }
-};
-const supportsFileSaving = typeof window.showSaveFilePicker === 'function' && window.isSecureContext;
-$('connect').hidden = !supportsFileSaving;
-$('connect').classList.toggle('record-primary',supportsFileSaving);
-$('export').classList.toggle('record-primary',!supportsFileSaving);
-handleStore('readonly').then(async handle => {
-  if (!handle) return;
-  rememberedHandle = handle;
-  if (await handle.queryPermission({mode:'readwrite'}) === 'granted') {
-    await attachFile(handle,false);
-  } else $('connect').textContent = 'Resume file save';
-}).catch(() => {});
 if (filter !== 'all' && !matches(selected)) selected = visible()[0] || null;
+setExportPending(true);
 render();
-persist(false);
+persist();

@@ -45,10 +45,10 @@ The output is one offline HTML file with embedded, deduplicated screenshots. Ide
 
 ## Review flow
 
-The grouped list locates changes; the purpose line explains the benefit; detail/context views support inspection. Accept/Decline records a decision without navigating away. Notes are independent. Next/previous, filters, and undo make it easy to review the remainder and revisit choices. There is no bulk acceptance.
+The grouped list locates changes; the purpose line explains the benefit; detail/context views support inspection. Accept/Decline records a decision without navigating away. Notes are independent. Next/previous and filters make it easy to review the remainder and revisit choices. There is no bulk acceptance.
 
-Keys: `1` accept, `2` decline, `J/K` next/previous, hold `Space` to show before, `N` note, `Z` undo, `M` device, `C` full context, `A` arrows, `S` next captured stage, `U` pending, `?` help. Shortcuts do not run while typing or using native select controls; Tab remains native.
+Keys: `1` accept, `2` decline, `J/K` next/previous, hold `Space` to show before, `N` note, `M` device, `C` full context, `A` arrows, `S` next captured stage, `U` pending. Shortcuts do not run while typing or using native select controls; Tab remains native.
 
-Browser autosave is local to that browser and origin. **Save to file** appears when the browser supports connecting a user-chosen JSON file for automatic, agent-readable saves. Existing records are read and merged before writing; another board's record is rejected. The visible status distinguishes browser saving, file saving, and failure. **Export decisions** downloads the record when file access is unavailable; never claim browser-only saving is shared or agent-readable.
+Decisions are cached locally when browser storage is available. **Export** downloads the agent-readable JSON record. Its red dot starts on each page load, clears after export, and returns when a decision or note changes. Switching views does not mark the record changed. The agent reads the exported record.
 
 Decision JSON contains `schemaVersion: 1`, `boardId`, `revision`, and `decisions` keyed by change ID. Each decision has `choice` (`accept`, `decline`, or null), `note`, `fingerprint`, and `updatedAt`. A note is not a third decision state. Use the record to apply selections, revise proposals from notes, and rebuild with the same IDs; verify the selected combination. Do not overwrite the user's source record when making a demonstration board.
