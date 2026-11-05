@@ -13,6 +13,14 @@ const CHOICES = ['accept', 'decline'];
 const FILTERS = ['pending', 'all', 'accept', 'decline', 'notes'];
 const key = 'design-grind:' + BOARD.id + ':v1';
 const items = BOARD.changes;
+const itemGroups = new Map();
+for (const item of items) {
+  if (!itemGroups.has(item.group)) itemGroups.set(item.group, []);
+  itemGroups.get(item.group).push(item);
+}
+const orderedItems = [...itemGroups.values()].flat();
+const devices = ['desktop', 'mobile'].filter(name => items.some(item =>
+  item.variants?.[name] || item.stages?.some(stage => stage.variants?.[name])));
 const byId = new Map(items.map(item => [item.id, item]));
 const safe = value => String(value ?? '').replace(/[&<>"']/g,
   char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
@@ -39,7 +47,7 @@ try { decisions = cleanDecisions(stored.decisions || {}); }
 catch { decisions = Object.create(null); }
 let filter = FILTERS.includes(stored.filter) ? stored.filter : (BOARD.initialFilter || 'pending');
 let selected = byId.get(location.hash.slice(1)) || byId.get(stored.selected) || byId.get(BOARD.initialChange) || items[0];
-let device = stored.device === 'mobile' ? 'mobile' : 'desktop';
+let device = devices.includes(stored.device) ? stored.device : (devices[0] || 'desktop');
 let fullContext = false, holdingBefore = false, stageIndex = 0, arrowsOn = stored.arrowsOn !== false;
 function decision(item) { return decisions[item.id] || {choice:null,note:'',fingerprint:'',updatedAt:''}; }
 function decisionSnapshot() {
@@ -57,10 +65,10 @@ function matches(item) {
   if (filter === 'pending') return !d.choice || stale(item);
   return d.choice === filter && !stale(item);
 }
-function visible() { return items.filter(matches); }
+function visible() { return orderedItems.filter(matches); }
 function navigationTarget(direction) {
-  const list = visible(), current = items.indexOf(selected);
-  const next = direction > 0 ? list.find(item => items.indexOf(item) > current) : [...list].reverse().find(item => items.indexOf(item) < current);
+  const list = visible(), current = orderedItems.indexOf(selected);
+  const next = direction > 0 ? list.find(item => orderedItems.indexOf(item) > current) : [...list].reverse().find(item => orderedItems.indexOf(item) < current);
   return next || (filter === 'pending' ? (direction > 0 ? list[0] : list.at(-1)) : null);
 }
 function record() {
@@ -167,7 +175,11 @@ function render() {
   $('evidence-note').textContent = selected.context || (selected.kind === 'evidence' ? 'Supporting work; no visual comparison is claimed.' : 'Screenshots show appearance. They do not prove interaction behavior.');
   $('source').hidden = !/^https:\/\//.test(selected.sourceUrl || '');
   if (!$('source').hidden) $('source').href = selected.sourceUrl;
-  for (const name of ['desktop','mobile']) $(name).setAttribute('aria-pressed', String(device === name));
+  $('device-controls').hidden = devices.length < 2;
+  for (const name of ['desktop','mobile']) {
+    $(name).setAttribute('aria-pressed', String(device === name));
+    $(name).disabled = devices.length < 2 || !devices.includes(name);
+  }
   $('context-toggle').setAttribute('aria-pressed', String(fullContext));
   $('context-toggle').innerHTML = (fullContext ? 'Detail' : 'Full context') + ' <kbd>C</kbd>';
   $('context-toggle').disabled = selected.kind === 'evidence';
@@ -195,9 +207,10 @@ function move(direction) {
 }
 function decide(choice) {
   if (!selected) return;
+  if (decision(selected).choice === choice && !stale(selected)) choice = null;
   decisions[selected.id] = {...decision(selected), choice, fingerprint:selected.fingerprint, updatedAt:new Date().toISOString()};
   render();
-  $('announcement').textContent = choice === 'accept' ? 'Accepted' : 'Declined';
+  $('announcement').textContent = choice === 'accept' ? 'Accepted' : choice === 'decline' ? 'Declined' : 'Decision cleared';
   persist();
 }
 function setFilter(value) {
@@ -227,7 +240,13 @@ $('menu').onclick = () => {
   const open = document.body.classList.toggle('sidebar-open');
   $('menu').setAttribute('aria-expanded',String(open));
 };
-for (const name of ['desktop','mobile']) $(name).onclick = () => { device = name; render(); persist(); };
+function setDevice(name) {
+  if (devices.length < 2 || !devices.includes(name)) return;
+  device = name;
+  render();
+  persist();
+}
+for (const name of ['desktop','mobile']) $(name).onclick = () => setDevice(name);
 $('context-toggle').onclick = () => { fullContext = !fullContext; render(); };
 $('arrows').onclick = () => { arrowsOn = !arrowsOn; render(); persist(); };
 $('stage-controls').onclick = event => { const button = event.target.closest('[data-stage]'); if (button) {stageIndex = Number(button.dataset.stage); render();} };
@@ -241,7 +260,7 @@ document.addEventListener('keydown', event => {
   const key = event.key.toLowerCase();
   const action = {'1':() => decide('accept'),'2':() => decide('decline'),
     j:() => move(-1),k:() => move(1),arrowright:() => move(1),arrowleft:() => move(-1),
-    n:() => {if (selected) $('note').focus();},m:() => {device = device === 'desktop' ? 'mobile' : 'desktop'; render(); persist();},
+    n:() => {if (selected) $('note').focus();},m:() => setDevice(device === 'desktop' ? 'mobile' : 'desktop'),
     c:() => {fullContext = !fullContext; render();},a:() => {arrowsOn = !arrowsOn; render(); persist();},
     s:() => {if (selected?.stages?.length) {stageIndex = (stageIndex + 1) % selected.stages.length; render();}},
     u:() => setFilter('pending')}[key];
