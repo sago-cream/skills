@@ -35,7 +35,7 @@ function cleanDecisions(raw) {
   return result;
 }
 let decisions;
-try { decisions = cleanDecisions(stored.decisions || BOARD.initialDecisions || {}); }
+try { decisions = cleanDecisions(stored.decisions || {}); }
 catch { decisions = Object.create(null); }
 let filter = FILTERS.includes(stored.filter) ? stored.filter : (BOARD.initialFilter || 'pending');
 let selected = byId.get(location.hash.slice(1)) || byId.get(stored.selected) || byId.get(BOARD.initialChange) || items[0];
