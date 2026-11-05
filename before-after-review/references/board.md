@@ -14,7 +14,7 @@ Rebuild after review:
 python3 <skill-dir>/scripts/build_board.py manifest.json --baseline original.html --decisions decisions.json --output review.html
 ```
 
-`--baseline` checks the board ID, fixed `revision.base`, and known Before descriptions and captures against the first board, including stages. Crops and annotations may change while retaining the original image. New changes or previously uncaptured states need genuine captures from the starting snapshot. Only `revision.head` advances between rounds.
+`--baseline` checks the board ID, fixed `revision.base`, and known Before descriptions and captures against the first board, including stages. Crops and annotations may change while retaining the original image. New changes or previously uncaptured states need genuine captures from the starting revision. Only `revision.head` advances between rounds.
 
 `--decisions` embeds the exported choices and notes. Unchanged fingerprints keep their choices; revised evidence requires a fresh decision. Local storage resumes edits only for the exact board version; rebuilding with different evidence or exported decisions starts from the supplied record.
 
