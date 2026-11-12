@@ -50,19 +50,14 @@ let selected = byId.get(location.hash.slice(1)) || byId.get(stored.selected) || 
 let device = devices.includes(stored.device) ? stored.device : (devices[0] || 'desktop');
 let fullContext = false, holdingBefore = false, stageIndex = 0, arrowsOn = stored.arrowsOn !== false;
 function decision(item) { return decisions[item.id] || {choice:null,note:'',fingerprint:'',updatedAt:''}; }
-function decisionSnapshot() {
-  return JSON.stringify(items.flatMap(item => {
-    const d = decision(item);
-    return d.choice || d.note ? [[item.id, d.choice, d.note, d.choice ? d.fingerprint : null]] : [];
-  }));
-}
-let exportBaseline = typeof stored.exportBaseline === 'string' ? stored.exportBaseline : decisionSnapshot();
-function stale(item) { const d = decision(item); return Boolean(d.choice && d.fingerprint !== item.fingerprint); }
+function stale(item) { const d = decision(item); return Boolean((d.choice || d.note.trim()) && d.fingerprint !== item.fingerprint); }
+function reviewed(item) { const d = decision(item); return Boolean((d.choice || d.note.trim()) && !stale(item)); }
+function allReviewed() { return items.every(reviewed); }
 function matches(item) {
   const d = decision(item);
   if (filter === 'all') return true;
   if (filter === 'notes') return Boolean(d.note.trim());
-  if (filter === 'pending') return !d.choice || stale(item);
+  if (filter === 'pending') return !reviewed(item);
   return d.choice === filter && !stale(item);
 }
 function visible() { return orderedItems.filter(matches); }
@@ -75,16 +70,9 @@ function record() {
   return {schemaVersion:1, boardId:BOARD.id, revision:BOARD.revision || null,
     decisions:Object.fromEntries(items.filter(item => decisions[item.id]).map(item => [item.id, decisions[item.id]]))};
 }
-function setExportPending(pending) {
-  $('export').dataset.pending = String(pending);
-  const label = pending ? 'Export decisions; changes not exported' : 'Export decisions';
-  $('export').setAttribute('aria-label', label);
-  $('export').title = pending ? 'Changes not exported' : 'Export decisions';
-}
 function persist() {
-  setExportPending(decisionSnapshot() !== exportBaseline);
   try {
-    localStorage.setItem(key, JSON.stringify({decisions, exportBaseline, filter, selected:selected?.id, device, arrowsOn}));
+    localStorage.setItem(key, JSON.stringify({decisions, filter, selected:selected?.id, device, arrowsOn}));
   } catch {}
 }
 function renderNav() {
@@ -96,11 +84,11 @@ function renderNav() {
   $('change-list').innerHTML = [...groups].map(([name, group]) =>
     '<section class="nav-group"><h2>' + safe(name) + '</h2>' + group.map(item =>
       '<button class="nav-item" data-id="' + item.id + '" aria-current="' + (selected?.id === item.id) + '">' +
-      '<span class="dot" aria-label="' + (stale(item) ? 'Comparison updated' : safe(decision(item).choice || 'Pending')) +
-      '" data-choice="' + safe(decision(item).choice) + '" data-stale="' + stale(item) + '"></span>' +
+      '<span class="dot" aria-label="' + (stale(item) ? 'Comparison updated' : safe(decision(item).choice || (reviewed(item) ? 'Commented' : 'Pending'))) +
+      '" data-choice="' + safe(decision(item).choice) + '" data-reviewed="' + reviewed(item) + '" data-stale="' + stale(item) + '"></span>' +
       '<span>' + safe(item.title) + '</span></button>').join('') + '</section>').join('');
-  const completed = items.filter(item => decision(item).choice && !stale(item)).length;
-  $('progress').textContent = completed + ' / ' + items.length + ' decided';
+  const completed = items.filter(reviewed).length;
+  $('progress').textContent = completed + ' / ' + items.length + ' reviewed';
   $('filter').value = filter;
   const active = $('change-list').querySelector('[aria-current=true]');
   if (active && $('sidebar').clientHeight) {
@@ -145,6 +133,12 @@ function renderComparison() {
       (image ? image.width + ' × ' + image.height : 'Text evidence') + '</span></figcaption>' + body + '</figure>';
   }).join('');
 }
+function renderSteps() {
+  $('prev').disabled = !navigationTarget(-1) || navigationTarget(-1) === selected;
+  const next = navigationTarget(1), finish = selected && allReviewed() && (!next || next === selected);
+  $('next').disabled = !finish && (!next || next === selected);
+  $('next').innerHTML = (finish ? 'Finish' : 'Next') + ' <kbd>K</kbd>';
+}
 function render() {
   renderNav();
   const empty = !selected;
@@ -158,12 +152,9 @@ function render() {
   const list = visible();
   const index = list.indexOf(selected);
   $('position').textContent = selected ? (index >= 0 ? (index + 1) + ' / ' + list.length : 'Decision saved') : '';
-  $('empty-title').textContent = filter === 'pending' ? 'No decisions left' : 'Nothing in this filter';
-  $('empty-copy').textContent = filter === 'pending' ? 'You can revisit any choice or export the record.' : 'Your decisions and notes are preserved.';
-  $('prev').disabled = !navigationTarget(-1) || navigationTarget(-1) === selected;
-  const next = navigationTarget(1), finish = selected && filter === 'pending' && !list.length;
-  $('next').disabled = !finish && (!next || next === selected);
-  $('next').innerHTML = (finish ? 'Finish' : 'Next') + ' <kbd>K</kbd>';
+  $('empty-title').textContent = filter === 'pending' ? 'All changes are reviewed' : 'Nothing in this filter';
+  $('empty-copy').textContent = filter === 'pending' ? 'You can continue reviewing or copy the result.' : 'Your decisions and notes are preserved.';
+  renderSteps();
   if (!selected) return;
   const d = decision(selected);
   document.querySelectorAll('[data-choice]').forEach(button => {
@@ -201,9 +192,14 @@ function choose(id) {
 }
 function move(direction) {
   const list = visible();
-  if (!list.length) { choose(null); return; }
+  if (!list.length) {
+    if (filter === 'pending' && allReviewed()) $('review-complete').showModal();
+    else choose(null);
+    return;
+  }
   const next = navigationTarget(direction);
   if (next) choose(next.id);
+  else if (direction > 0 && allReviewed()) $('review-complete').showModal();
 }
 function decide(choice) {
   if (!selected) return;
@@ -231,9 +227,13 @@ $('next').onclick = () => move(1);
 $('show-all').onclick = () => setFilter('all');
 $('note').oninput = () => {
   if (!selected) return;
-  decisions[selected.id] = {...decision(selected), note:$('note').value.slice(0,12000), updatedAt:new Date().toISOString()};
+  const previous = decision(selected);
+  decisions[selected.id] = {...previous, note:$('note').value.slice(0,12000),
+    fingerprint:previous.choice ? previous.fingerprint : selected.fingerprint, updatedAt:new Date().toISOString()};
   // A note never reconfirms an outdated accept/decline choice.
   renderNav();
+  renderSteps();
+  $('stale').hidden = !stale(selected);
   persist();
 };
 $('menu').onclick = () => {
@@ -251,6 +251,7 @@ $('context-toggle').onclick = () => { fullContext = !fullContext; render(); };
 $('arrows').onclick = () => { arrowsOn = !arrowsOn; render(); persist(); };
 $('stage-controls').onclick = event => { const button = event.target.closest('[data-stage]'); if (button) {stageIndex = Number(button.dataset.stage); render();} };
 document.addEventListener('keydown', event => {
+  if ($('review-complete').open) return;
   if (event.key === 'Escape') {
     if (event.target === $('note')) { event.target.blur(); $('comparison').focus(); }
     return;
@@ -274,15 +275,59 @@ document.addEventListener('keyup', event => {
 });
 window.addEventListener('blur', () => { if (holdingBefore) {holdingBefore = false; renderComparison();} });
 window.addEventListener('hashchange', () => { if (byId.has(location.hash.slice(1))) choose(location.hash.slice(1)); });
-$('export').onclick = () => {
-  const url = URL.createObjectURL(new Blob([JSON.stringify(record(),null,2)+'\n'],{type:'application/json'}));
-  const link = document.createElement('a');
-  link.href = url; link.download = BOARD.id + '-decisions.json'; link.click();
-  exportBaseline = decisionSnapshot();
-  persist();
-  $('announcement').textContent = 'Decision record download started';
-  setTimeout(() => URL.revokeObjectURL(url),1000);
-};
+function copyText(text) {
+  const active = document.activeElement;
+  const field = document.createElement('textarea');
+  field.value = text;
+  field.readOnly = true;
+  field.style.cssText = 'position:fixed;top:0;left:-9999px;width:1px;height:1px;opacity:0;';
+  // Keep the field inside the active modal so it can receive focus.
+  ($('review-complete').open ? $('review-complete') : document.body).append(field);
+  try {
+    field.focus();
+    field.select();
+    return document.execCommand('copy');
+  } catch { return false; }
+  finally { field.remove(); active?.focus({preventScroll:true}); }
+}
+let toastTimer;
+function showCopyToast(message) {
+  const toast = $('copy-toast');
+  clearTimeout(toastTimer);
+  if (toast.matches(':popover-open')) toast.hidePopover();
+  ($('review-complete').open ? $('review-complete') : document.body).append(toast);
+  toast.textContent = message;
+  toast.showPopover();
+  toastTimer = setTimeout(() => toast.hidePopover(),2000);
+}
+async function copyResult() {
+  const text = JSON.stringify(record(),null,2) + '\n';
+  let copied = false;
+  try { await navigator.clipboard.writeText(text); copied = true; }
+  catch { copied = copyText(text); }
+  if (copied) {
+    showCopyToast('Copied to clipboard');
+  } else {
+    showCopyToast('Copy failed. Open this board in your browser and try again.');
+  }
+}
+$('copy-result').onclick = copyResult;
+$('complete-copy').onclick = copyResult;
+$('continue-review').onclick = () => { $('review-complete').close(); setFilter('all'); $('comparison').focus(); };
+$('dismiss-review').onclick = () => $('review-complete').close();
+function outsideDialog(event) {
+  const box = $('review-complete').getBoundingClientRect();
+  return event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom;
+}
+let backdropPress = false;
+$('review-complete').addEventListener('pointerdown', event => {
+  backdropPress = event.target === $('review-complete') && outsideDialog(event);
+});
+$('review-complete').addEventListener('click', event => {
+  if (backdropPress && event.target === $('review-complete') && outsideDialog(event)) $('review-complete').close();
+  backdropPress = false;
+});
 if (filter !== 'all' && !matches(selected)) selected = visible()[0] || null;
 render();
 persist();
+if (filter === 'pending' && allReviewed()) $('review-complete').showModal();

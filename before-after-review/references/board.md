@@ -16,7 +16,7 @@ python3 <skill-dir>/scripts/build_board.py manifest.json --baseline original.htm
 
 `--baseline` checks the board ID, any supplied `revision.base`, and known Before descriptions and captures against the first board, including stages. Crops and annotations may change while retaining the original image. New changes or previously uncaptured states need genuine evidence from the original baseline.
 
-`--decisions` embeds the exported choices and notes. Unchanged fingerprints keep their choices; revised evidence requires a fresh decision. Local storage resumes edits only for the exact board version; rebuilding with different evidence or exported decisions starts from the supplied record.
+`--decisions` embeds the copied choices and notes. Unchanged fingerprints keep their choices; revised evidence requires a fresh decision. Local storage resumes edits only for the exact board version; rebuilding with different evidence or copied decisions starts from the supplied record.
 
 ## Catalog
 
@@ -56,10 +56,10 @@ python3 <skill-dir>/scripts/build_board.py manifest.json --baseline original.htm
 
 ## Review flow
 
-The grouped list locates changes; the purpose line explains the benefit; detail/context views support inspection. Accept/Decline toggles a decision without navigating away; repeating the current choice clears it. Repeating a choice on changed evidence reconfirms it. Notes are independent. Next/previous follows the item order shown in the grouped list within the active filter. There is no bulk acceptance.
+The grouped list locates changes; the purpose line explains the benefit; detail/context views support inspection. Accept/Decline toggles a decision without navigating away; repeating the current choice clears it. Repeating a choice on changed evidence reconfirms it. Notes are independent. A non-empty note counts as reviewed without selecting Accept or Decline; whitespace alone does not. Changed evidence still needs review. Next/previous follows the item order shown in the grouped list within the active filter. There is no bulk acceptance.
 
 Keys: `1` toggle accept, `2` toggle decline, `J/K` or left/right arrows previous/next item, hold `Space` to show before, `N` note, `M` device, `C` full context, `A` arrows, `S` next captured stage, `U` pending. Shortcuts do not run while typing or using native select controls; Tab remains native.
 
-Decisions are cached locally when browser storage is available. **Export** downloads the agent-readable JSON record. Its red dot indicates decisions or notes that differ from the starting or last-exported record. Reverting edits clears it; timestamps and empty note-only entries do not count as changes. The comparison survives reloads when browser storage is available. Switching views does not mark the record changed. The agent reads the exported record.
+Decisions are cached locally when browser storage is available. **Copy result** copies the agent-readable JSON for the user to paste into the original review thread. A successful copy shows a brief “Copied to clipboard” toast and keeps the button label unchanged. The action copies immediately without navigating or opening another dialog; it tries the browser copy command when the Clipboard API is unavailable. If both methods fail, show a copy failure without claiming success. There is no unsent-change dot. When every change has a current decision or a non-empty comment, **Finish** opens “All changes are reviewed” with **Continue review** and **Copy result**. The close button, clicking outside the dialog, and Escape dismiss it without changing the review. Continuing shows all changes. Comment-only entries retain a null choice; they are reviewed, not accepted. Editing a note does not reconfirm an outdated Accept/Decline choice. The comparison survives reloads when browser storage is available.
 
 Decision JSON contains `schemaVersion: 1`, `boardId`, `revision`, and `decisions` keyed by change ID. Each decision has `choice` (`accept`, `decline`, or null), `note`, `fingerprint`, and `updatedAt`. A note is not a third decision state. Return this record and identify choices whose fingerprints no longer match; the calling workflow applies selections and verifies its implementation.

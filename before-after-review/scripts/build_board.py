@@ -179,7 +179,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('manifest', type=Path)
     parser.add_argument('--output', type=Path, required=True)
-    parser.add_argument('--decisions', type=Path, help='Previous exported decision JSON for this board and original baseline')
+    parser.add_argument('--decisions', type=Path, help='Previous decision JSON for this board and original baseline')
     parser.add_argument('--baseline', type=Path, help='Original board HTML; required with --decisions')
     args = parser.parse_args()
     print(json.dumps(build(args.manifest, args.output, args.decisions, args.baseline)))
