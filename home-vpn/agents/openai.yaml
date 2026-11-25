@@ -1,0 +1,3 @@
+interface:
+  display_name: "Home VPN"
+  short_description: "Turn the home VPN on or off across box and Mac"
