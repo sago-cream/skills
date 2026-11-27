@@ -33,6 +33,10 @@ npx skills add sago-cream/skills -g
 - [$improve-codebase-architecture](https://github.com/sago-cream/skills/tree/main/improve-codebase-architecture): Combines Matt Pocock’s deep-module guidance and visual architecture review without the grilling loop.
 - [$improve-codebase-layout](https://github.com/sago-cream/skills/tree/main/improve-codebase-layout): Rearranges files and folders for newcomer navigation without redesigning modules.
 
+### Home Networking
+
+- [$home-vpn](https://github.com/sago-cream/skills/tree/main/home-vpn): Turns the home VPN on or off across box and Mac, restoring NTHUSA when off.
+
 ### Quicker Git Workflow
 
 - [$pr](https://github.com/sago-cream/skills/tree/main/pr): Reviews committed changes and publishes a maintainer-ready draft pull request.
