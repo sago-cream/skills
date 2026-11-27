@@ -1,11 +1,11 @@
 ---
 name: home-vpn
-description: Turn Hsi's home VPN on or off across box and Mac. On routes the Mac through box; off restores box to NTHUSA and clears the Mac exit node. Also check home VPN status.
+description: Handle “home vpn on”, “home vpn off”, and home VPN status across Hsi's box and Mac, from either host. On routes the Mac through box; off restores box to NTHUSA and clears the Mac exit node.
 ---
 
 # Home VPN
 
-Use `$home-vpn on` or “home-vpn on” to enable the home VPN, `$home-vpn off` to disable it, and `$home-vpn status` for a read-only check. A bare “home-vpn” request needs an explicit on/off/status choice; do not guess or toggle the current state.
+Use `$home-vpn on`, “home-vpn on”, or “home vpn on” to enable the home VPN; accept the same spellings for `off` and `status`. A bare “home-vpn” request needs an explicit on/off/status choice; do not guess or toggle the current state. An explicit `on` request authorizes the coordinated two-host switch below.
 
 | Command | box | Mac |
 | --- | --- | --- |
@@ -15,11 +15,14 @@ Use `$home-vpn on` or “home-vpn on” to enable the home VPN, `$home-vpn off` 
 ## Saved installation
 
 - box is Linux. Saved profiles: `7f5e` (NTHUSA), `fba9` (personal).
+- Mac saved profiles: `49d7` (NTHUSA), `97eb` (personal).
 - Personal network: `sago-cream.github`, suffix `tail849708.ts.net`.
 - box's personal address: `100.80.81.66`; Mac: `100.104.90.95`.
 - NTHUSA network: `nthu-sa.org.github`; upstream exit: `nthusa-nas`, `100.90.147.102`.
 - Mac T3 environment: `c7236259-0de3-454b-ad8c-c97edf265e6e`, Hsi's MacBook Air. Confirm with `t3_environment_links`; saved links can expire.
 - Forwarding and personal exit-node approval already exist. Routine switching reuses profiles and needs no API token or reauthentication.
+
+These saved facts and live inspection are sufficient for routine requests; no thread-history search is needed. An offline personal `box` peer can mean box is on its NTHUSA profile, which is the normal off state. Inspect box through its linked environment before declaring it unavailable or asking which VPN the user means. The Mac's NTHUSA NAS exit is not the home VPN.
 
 ## Execute on each host
 
@@ -32,7 +35,9 @@ python3 scripts/switch_mode.py plan --role box --mode off
 
 The helper changes one host at a time; coordinate hosts in the order below. Box `apply` runs as root so its systemd recovery timer can restore a profile even if operator permissions change. Use the environment's secure secret tool for sudo when needed; never store a password here.
 
-For the Mac, use its linked T3 environment. If no remote command tool is exposed, **delegate the Mac operation** with `delegate_task`, `target.environmentId` set to the confirmed Mac environment, and `mode: wait`. Follow current capability/wait rules and inherit provider/model/settings. Include the exact helper source in the task so the child can save it to a private temporary directory and run it locally: box paths are not shared with the Mac. Specify the requested command, no unrelated changes, and no further delegation. Do not create a top-level thread for this. Use an existing SSH route only after confirming it is independent of the departing tailnet.
+Identify the current host first. Run its helper locally; use `t3_environment_links` for the other host. From the Mac, run Mac commands locally and coordinate box remotely. From box, run box commands locally and coordinate the Mac remotely.
+
+If no remote command tool is exposed, **delegate the remote host operation** with `delegate_task`, `target.environmentId` set to that host's confirmed environment, and `mode: wait`. Follow current capability/wait rules and inherit provider/model/settings. Include the exact helper source in the task so the child can save it to a private temporary directory and run it locally: paths are not shared between hosts. Specify the requested command, no unrelated changes, and no further delegation. Do not create a top-level thread for this. Use an existing SSH route only after confirming it is independent of the departing tailnet; the Mac's `ssh box` alias selects NTHUSA and cannot carry a switch away from it.
 
 If Mac automation is unavailable, have the user make the indicated menu change and verify it before continuing. The user is on the Mac; a browser opened on box cannot change Mac settings.
 
