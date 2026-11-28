@@ -37,7 +37,13 @@ The helper changes one host at a time; coordinate hosts in the order below. Box 
 
 Identify the current host first. Run its helper locally; use `t3_environment_links` for the other host. From the Mac, run Mac commands locally and coordinate box remotely. From box, run box commands locally and coordinate the Mac remotely.
 
-If no remote command tool is exposed, **delegate the remote host operation** with `delegate_task`, `target.environmentId` set to that host's confirmed environment, and `mode: wait`. Follow current capability/wait rules and inherit provider/model/settings. Include the exact helper source in the task so the child can save it to a private temporary directory and run it locally: paths are not shared between hosts. Specify the requested command, no unrelated changes, and no further delegation. Do not create a top-level thread for this. Use an existing SSH route only after confirming it is independent of the departing tailnet; the Mac's `ssh box` alias selects NTHUSA and cannot carry a switch away from it.
+If no remote command tool is exposed, **delegate the remote host operation** with `delegate_task`, `target.environmentId` set to that host's confirmed environment, and `mode: wait`.
+
+- Resolve the target using `orchestrator_capabilities` on the destination. Provider instance IDs belong to each machine: this Mac uses `codex_cli`, while box uses `codex`, both with driver `codex`. Pass the destination's enabled `providerInstanceId` explicitly, preserving the current provider driver, model, and settings. Resolve these live rather than hardcoding the saved IDs. If the same provider/model is unavailable or the matching instance is ambiguous, report that instead of substituting a different provider or model.
+- For a scratch thread without a matching remote repository, use `t3_project_list` on the destination and pass its scratch project's `target.projectId` explicitly.
+- Include the exact helper source in the task so the child can save it to a private temporary directory and run it locally: paths are not shared between hosts. Specify the requested command, no unrelated changes, and no further delegation. Follow the returned wait instructions; do not create a top-level thread for this.
+
+Use an existing SSH route only after confirming it is independent of the departing tailnet; the Mac's `ssh box` alias selects NTHUSA and cannot carry a switch away from it.
 
 If Mac automation is unavailable, have the user make the indicated menu change and verify it before continuing. The user is on the Mac; a browser opened on box cannot change Mac settings.
 
